@@ -1,0 +1,6 @@
+#Schema MARC21-Tag = Regular Expression
+
+100$a: "^Mozart.*"
+245$a: "Zauberflöte"
+#100$a: "^(?!.*?André).*"
+#852$a: "D-OF"
