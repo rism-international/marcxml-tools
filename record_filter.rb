@@ -13,14 +13,6 @@ require 'ruby-progressbar'
 #end
 
 
-def number_with_dots(number)
-  return number.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1.').reverse
-end
-
-puts number_with_dots(1040000)
-
-exit
-
 total=0
 #OTIONS
 opts = Trollop::options do
@@ -54,7 +46,7 @@ if opts[:total]
     end
   end
 else
-  total= 1028000
+total= 1040000
 end
 puts "Total: #{total}"
 
@@ -76,7 +68,7 @@ ofile=File.open(resfile, 'w')
 ofile.write('<?xml version="1.0" encoding="UTF-8"?>'+"\n"+'<collection>'+"\n")
 
 
-bar = ProgressBar.create(title: "Found", :format => "%c of %C Records checked. -- %a | %B | %p%% %e", total: total, remainder_mark: '=', progress_mark: '#')
+bar = ProgressBar.create(title: "Found", :format => "%c of %C Records checked. -- %a | %B | %p%% %e", total: total, remainder_mark: '-', progress_mark: '#')
 #QUERY
 each_record(source_file) do |record|
   result={}
