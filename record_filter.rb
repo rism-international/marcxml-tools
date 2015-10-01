@@ -3,7 +3,25 @@ require 'rubygems'
 require 'yaml'
 require 'nokogiri'
 require 'trollop'
+require 'ruby-progressbar'
 
+
+
+#100.times do 
+#  bar.increment 
+#  sleep 0.1 
+#end
+
+
+def number_with_dots(number)
+  return number.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1.').reverse
+end
+
+puts number_with_dots(1040000)
+
+exit
+
+total=0
 #OTIONS
 opts = Trollop::options do
     version "RISM record_filter 1.0"
@@ -16,6 +34,7 @@ where [options] are:
 EOS
 
   opt :conf, "Configuration-Filename", :type => :string, :default => "query.yaml"
+  opt :total, "Count record total", :default => false
   opt :infile, "Input-Filename", :type => :string
   opt :outfile, "Output-Filename", :type => :string, :default => "out.xml"
 end
@@ -24,6 +43,20 @@ Trollop::die :infile, "must exist; you can download it from https://opac.rism.in
 source_file=opts[:infile]
 resfile=opts[:outfile]
 query=YAML.load_file(opts[:conf])
+
+if opts[:total]
+  puts "Calculating total size..."
+  File.open source_file do |file|
+    file.each_line do |line|
+      if line =~ /leader/ 
+        total+=1
+      end
+    end
+  end
+else
+  total= 1028000
+end
+puts "Total: #{total}"
 
 #Helper method to parse huge files with nokogiri
 def each_record(filename, &block)
@@ -42,6 +75,8 @@ ofile=File.open(resfile, 'w')
 
 ofile.write('<?xml version="1.0" encoding="UTF-8"?>'+"\n"+'<collection>'+"\n")
 
+
+bar = ProgressBar.create(title: "Found", :format => "%c of %C Records checked. -- %a | %B | %p%% %e", total: total, remainder_mark: '=', progress_mark: '#')
 #QUERY
 each_record(source_file) do |record|
   result={}
@@ -55,16 +90,21 @@ each_record(source_file) do |record|
       end
     end
   end
+  cnt+=1
+  #if TOTAL % cnt == 0
+  #end
   #RESULT
   if result.size==query.size
       found+=1
       n=Nokogiri::XML(record.to_s, &:noblanks)
       ofile.puts(n.root.to_xml :indent => 4)
   end
-  print "\rRecords: #{cnt+=1}"+"\t\t"+"Found: #{found}"
+  #print "\rRecords: #{cnt+=1}"+"\t\t"+"Found: #{found}"
+  bar.increment
 end
 ofile.puts("</collection>")
 ofile.close
 puts "\n"
 puts "Completed!"
+puts "Records: #{cnt+=1}"+" /  "+"Found: #{found}"
 

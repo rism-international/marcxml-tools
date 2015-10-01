@@ -1,6 +1,8 @@
 #Schema MARC21-Tag = Regular Expression
 
-100$a: "^Mozart.*"
-245$a: "Zauberflöte"
+561$a: "Fürsten- und Landesschule, Grimma"
+852$c: "^(?!.*?Mus.Gri.).*"
+#100$a: "^Mozart.*"
+#245$a: "Zauberflöte"
 #100$a: "^(?!.*?André).*"
 #852$a: "D-OF"
