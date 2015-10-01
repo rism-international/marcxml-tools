@@ -73,9 +73,13 @@ bar = ProgressBar.create(title: "Found", :format => "%c of %C Records checked. -
 each_record(source_file) do |record|
   result={}
   query.each do |k,v|
-    df=k.split("$")[0]
-    sf=k.split("$")[1]
-    res=record.xpath('//datafield[@tag="'+df+'"]/subfield[@code="'+sf+'"]')
+    if k.include?('$')
+      df=k.split("$")[0]
+      sf=k.split("$")[1]
+      res=record.xpath('//datafield[@tag="'+df+'"]/subfield[@code="'+sf+'"]')
+    else
+      res=record.xpath('//controlfield[@tag="'+k+'"]')
+    end
     res.each do |node|
       if node.content =~ /#{v}/
         result[k]=true
