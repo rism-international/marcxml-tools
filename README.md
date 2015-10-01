@@ -11,7 +11,7 @@ complete XML open dataset of sources at http://opac.rism.info.
 
 Filtering rules are defined by key-value pairs in a YAML-configuration file (default: query.yaml): 
 
-* Key is the Marc21 file (e.g. 100$a)
+* Key is the Marc21 field (e.g. 100$a)
 * Value is a regular expression (e.g. "Mozart.*")
 
 Query parameters (one per line) are combined with "AND".
