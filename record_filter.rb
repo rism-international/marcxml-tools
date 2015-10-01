@@ -4,28 +4,22 @@ require 'yaml'
 require 'nokogiri'
 require 'trollop'
 require 'ruby-progressbar'
-
-
-
-#100.times do 
-#  bar.increment 
-#  sleep 0.1 
-#end
-
+require 'rbconfig'
+OS=RbConfig::CONFIG['host_os']
 
 total=0
 #OTIONS
 opts = Trollop::options do
-    version "RISM record_filter 1.0"
-    banner <<-EOS
+  version "RISM record_filter 1.0"
+  banner <<-EOS
 This utility program searches the complete RISM open data XML-File with parameters of query.yaml
 
 Usage:
    record_search [options]
 where [options] are:
-EOS
+  EOS
 
-  opt :conf, "Configuration-Filename", :type => :string, :default => "query.yaml"
+  opt :query, "Query-Filename", :type => :string, :default => "query.yaml"
   opt :total, "Count record total", :default => false
   opt :infile, "Input-Filename", :type => :string
   opt :outfile, "Output-Filename", :type => :string, :default => "out.xml"
@@ -34,21 +28,31 @@ end
 Trollop::die :infile, "must exist; you can download it from https://opac.rism.info/fileadmin/user_upload/lod/update/rismAllMARCXML.zip" if !opts[:infile]
 source_file=opts[:infile]
 resfile=opts[:outfile]
-query=YAML.load_file(opts[:conf])
+query=YAML.load_file(opts[:query])
 
-if opts[:total]
-  puts "Calculating total size..."
-  File.open source_file do |file|
-    file.each_line do |line|
-      if line =~ /leader/ 
-        total+=1
+if opts[:total] || OS =~ /linux/
+  puts "Calculating total size, please wait..."
+  #app=3713.404
+  #app=3000
+  #total=(File.size(source_file) / app).floor
+  if OS =~ /linux/
+    total =`grep -c "leader" #{source_file}`.to_i
+  else
+    #x=open(source_file).grep(/leader/)
+    #puts x
+    #exit
+    File.open source_file do |file|
+      file.each_line do |line|
+        if line =~ /<record>/ 
+          total+=1
+        end
       end
     end
   end
 else
-total= 1040000
+  total= 1029000
 end
-puts "Total: #{total}"
+
 
 #Helper method to parse huge files with nokogiri
 def each_record(filename, &block)
@@ -66,7 +70,6 @@ found=0
 ofile=File.open(resfile, 'w')
 
 ofile.write('<?xml version="1.0" encoding="UTF-8"?>'+"\n"+'<collection>'+"\n")
-
 
 bar = ProgressBar.create(title: "Found", :format => "%c of %C Records checked. -- %a | %B | %p%% %e", total: total, remainder_mark: '-', progress_mark: '#')
 #QUERY
@@ -91,16 +94,18 @@ each_record(source_file) do |record|
   #end
   #RESULT
   if result.size==query.size
-      found+=1
-      n=Nokogiri::XML(record.to_s, &:noblanks)
-      ofile.puts(n.root.to_xml :indent => 4)
+    found+=1
+    n=Nokogiri::XML(record.to_s, &:noblanks)
+    ofile.puts(n.root.to_xml :indent => 4)
   end
   #print "\rRecords: #{cnt+=1}"+"\t\t"+"Found: #{found}"
   bar.increment
+  #  if found > 1 && found % 10==0
+  #    bar.log "#{found} records found."
+  #  end
 end
 ofile.puts("</collection>")
 ofile.close
-puts "\n"
-puts "Completed!"
 puts "Records: #{cnt+=1}"+" /  "+"Found: #{found}"
+puts "Finished!"
 
