@@ -7,7 +7,6 @@ require 'ruby-progressbar'
 require 'rbconfig'
 OS=RbConfig::CONFIG['host_os']
 
-total=0
 #OTIONS
 opts = Trollop::options do
   version "RISM record_filter 1.0"
@@ -20,7 +19,6 @@ where [options] are:
   EOS
 
   opt :query, "Query-Filename", :type => :string, :default => "query.yaml"
-  opt :total, "Count record total", :default => false
   opt :infile, "Input-Filename", :type => :string
   opt :outfile, "Output-Filename", :type => :string, :default => "out.xml"
 end
@@ -30,29 +28,23 @@ source_file=opts[:infile]
 resfile=opts[:outfile]
 query=YAML.load_file(opts[:query])
 
-if opts[:total] || OS =~ /linux/
-  puts "Calculating total size, please wait..."
-  #app=3713.404
-  #app=3000
-  #total=(File.size(source_file) / app).floor
-  if OS =~ /linux/
-    total =`grep -c "leader" #{source_file}`.to_i
+puts "Calculating total size..."
+total=0
+if OS =~ /linux/
+  total =`grep -c "leader" #{source_file}`.to_i
+else
+  file_size=File.size(source_file)
+  if file_size > 800000000
+    approx=3700
+    total=(file_size / approx).floor
   else
-    #x=open(source_file).grep(/leader/)
-    #puts x
-    #exit
-    File.open source_file do |file|
-      file.each_line do |line|
-        if line =~ /<record>/ 
-          total+=1
-        end
+    File.open( source_file, 'r:BINARY' ) do |io|
+      io.each do |line| 
+        total+=1 if line =~ /leader/
       end
     end
   end
-else
-  total= 1029000
 end
-
 
 #Helper method to parse huge files with nokogiri
 def each_record(filename, &block)
@@ -106,6 +98,5 @@ each_record(source_file) do |record|
 end
 ofile.puts("</collection>")
 ofile.close
-puts "Records: #{cnt+=1}"+" /  "+"Found: #{found}"
-puts "Finished!"
+puts "#{found} Records found!"
 
