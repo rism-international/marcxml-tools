@@ -20,7 +20,7 @@ gives an output-XML-file with a subset of 476 records (as of October 2015).
 
 Semantic structure:
 * Key is the Marc21 field (e.g. "100$a" or "005")
-* Value is a regular expression (e.g. "Mozart.\*")
+* Value is a regular expression (e.g. "Mozart.\*"). Hint: regular expression for negative matching (e.g. "^(?!.\*term).\*$"), see: http://www.regular-expressions.info/lookaround.html. 
 
 Query parameters (one per line) are combined with __"AND"__ logic.
 
