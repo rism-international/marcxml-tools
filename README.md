@@ -22,6 +22,8 @@ __Example__: Query for all new records from Bach in Berlin, State Library in 201
 "852$a": "^D-B$"
 
 ```
+gives an output-XML-file with a subset of 476 records (as of October 2015). 
+
 
 Semantic structure:
 * Key is the Marc21 field (e.g. "100$a" or "005")
