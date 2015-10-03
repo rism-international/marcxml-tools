@@ -1,7 +1,5 @@
 # RISM Record filter
 
-## Description
-
 RISM record filter is a small command line utility for building a subset of records from the 
 complete XML open dataset of sources at http://opac.rism.info. 
 
