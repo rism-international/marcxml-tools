@@ -2,11 +2,12 @@
 
 Helpful links and tutorials
 * RISM Opendata: https://opac.rism.info/index.php?id=8&L=0
-* Regular Expression:  https://en.wikipedia.org/wiki/Regular_expression
+* MARC21 Documentation: http://www.loc.gov/marc/bibliographic/  
+* Regular Expression: https://en.wikipedia.org/wiki/Regular_expression
 
 ## Description
 
-RISM record filter is a small command line utility for building a subset of  records from the 
+RISM record filter is a small command line utility for building a subset of records from the 
 complete XML open dataset of sources at http://opac.rism.info. 
 
 Filtering rules are defined by key-value pairs in an YAML-configuration file (default: query.yaml). 
@@ -29,6 +30,8 @@ Semantic structure:
 Query parameters (one per line) are combined with "AND" logic.
 
 It is possible to look also for dependend records in a collection with the '-c' parameter.
+
+For more options see `record_filter --help`.
 
 ## Installation
 
