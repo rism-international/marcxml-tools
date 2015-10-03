@@ -9,25 +9,30 @@ Helpful links and tutorials
 RISM record filter is a small command line utility for building a subset of  records from the 
 complete XML open dataset of sources at http://opac.rism.info. 
 
-Filtering rules are defined by key-value pairs in an YAML-configuration file (default: query.yaml). Example
+Filtering rules are defined by key-value pairs in an YAML-configuration file (default: query.yaml). 
+
+Example: Query for all new records from Bach in Berlin, State Library in 2015:
 
 ```yaml
+# query.yaml
 "005": "^2015"
 "100$a":
-  - "Mozart"
-  - "Bach"
-"852$a": "D-B"
+  - "Bach, Johann Sebastian"
+"852$a": "^D-B$"
 
 ```
 
+Semantic structure:
 * Key is the Marc21 field (e.g. "100$a" or "005")
 * Value is a regular expression (e.g. "Mozart.*")
 
 Query parameters (one per line) are combined with "AND" logic.
 
+It is possible to look also for dependend records in a collection with the '-c' parameter.
+
 ## Installation
 
-Requirements
+###Requirements
 
 * Ruby
 

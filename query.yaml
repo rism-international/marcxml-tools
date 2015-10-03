@@ -1,9 +1,12 @@
 #Schema MARC21-Tag = Regular Expression
 #Hint: negative query="^(?!.*?TERM).*"
-
-561$a: 
-  - "Fürsten- und Landesschule, Grimma"
-852$c: "^(?!.*?Mus.Gri.).*"
+"005": "^2015"
+"100$a":
+  - "Bach, Johann Sebastian"
+"852$a": "^D-B$"
+#561$a: 
+#  - "Fürsten- und Landesschule, Grimma"
+#852$c: "^(?!.*?Mus.Gri.).*"
 
 #"100$a": "Mozart"
 #"593$a": "print"
