@@ -1,10 +1,5 @@
 # RISM Record filter
 
-Helpful links and tutorials
-* RISM Opendata: https://opac.rism.info/index.php?id=8&L=0
-* MARC21 Documentation: http://www.loc.gov/marc/bibliographic/  
-* Regular Expression: https://en.wikipedia.org/wiki/Regular_expression
-
 ## Description
 
 RISM record filter is a small command line utility for building a subset of records from the 
@@ -40,4 +35,10 @@ For more options see `record_filter --help`.
 ###Requirements
 
 * Ruby
+
+## Links and tutorials
+* RISM Opendata: https://opac.rism.info/index.php?id=8&L=0
+* MARC21 Documentation: http://www.loc.gov/marc/bibliographic/  
+* Regular Expression: https://en.wikipedia.org/wiki/Regular_expression
+
 
