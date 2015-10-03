@@ -32,7 +32,7 @@ query=YAML.load_file(opts[:query])
 print "\rCalculating total size..."
 total=0
 if OS =~ /linux/
-  total =`grep -c "leader" #{source_file}`.to_i
+  total =`grep -c "<record>" #{source_file}`.to_i
 else
   file_size=File.size(source_file)
   if file_size > 800000000
@@ -41,7 +41,7 @@ else
   else
     File.open( source_file, 'r:BINARY' ) do |io|
       io.each do |line| 
-        total+=1 if line =~ /leader/
+        total+=1 if line =~ /<record>/
       end
     end
   end

@@ -6,10 +6,19 @@ Helpful links and tutorials
 
 ## Description
 
-RISM record filter is a small ruby utility program for filtering records from the 
+RISM record filter is a small command line utility for building a subset of  records from the 
 complete XML open dataset of sources at http://opac.rism.info. 
 
-Filtering rules are defined by key-value pairs in a YAML-configuration file (default: query.yaml): 
+Filtering rules are defined by key-value pairs in an YAML-configuration file (default: query.yaml). Example
+
+```yaml
+"005": "^2015"
+"100$a":
+  - "Mozart"
+  - "Bach"
+"852$a": "D-B"
+
+```
 
 * Key is the Marc21 field (e.g. "100$a" or "005")
 * Value is a regular expression (e.g. "Mozart.*")
