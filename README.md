@@ -12,7 +12,7 @@ complete XML open dataset of sources at http://opac.rism.info.
 
 Filtering rules are defined by key-value pairs in an YAML-configuration file (default: query.yaml). 
 
-Example: Query for all new records from Bach in Berlin, State Library in 2015:
+__Example__: Query for all new records from Bach in Berlin, State Library in 2015:
 
 ```yaml
 # query.yaml
@@ -25,9 +25,9 @@ Example: Query for all new records from Bach in Berlin, State Library in 2015:
 
 Semantic structure:
 * Key is the Marc21 field (e.g. "100$a" or "005")
-* Value is a regular expression (e.g. "Mozart.*")
+* Value is a regular expression (e.g. "Mozart.\*")
 
-Query parameters (one per line) are combined with "AND" logic.
+Query parameters (one per line) are combined with __"AND"__ logic.
 
 It is possible to look also for dependend records in a collection with the '-c' parameter.
 
