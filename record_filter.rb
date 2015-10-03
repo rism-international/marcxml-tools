@@ -20,6 +20,7 @@ where [options] are:
 
   opt :query, "Query-Filename", :type => :string, :default => "query.yaml"
   opt :connected, "Look for connected individual entries", :default=> false
+  opt :debug, "Debugging mode", :default => false
   opt :infile, "Input-Filename", :type => :string
   opt :outfile, "Output-Filename", :type => :string, :default => "out.xml"
 end
@@ -46,10 +47,14 @@ else
   end
 end
 
+if opts[:connected]
+  total=total * 2
+end
+
 connected_records=[]
 result_records=[]
-
 print "\rQuery: #{query}"
+
 #Helper method to parse huge files with nokogiri
 def each_record(filename, &block)
   File.open(filename) do |file|
@@ -62,12 +67,10 @@ def each_record(filename, &block)
 end
 
 cnt=1
-found=0
 ofile=File.open(resfile, 'w')
-
 ofile.write('<?xml version="1.0" encoding="UTF-8"?>'+"\n"+'<collection>'+"\n")
-
 bar = ProgressBar.create(title: "Found", :format => "%c of %C Records checked. -- %a | %B | %p%% %e", total: total, remainder_mark: '-', progress_mark: '#')
+
 #QUERY
 each_record(source_file) do |record|
   result=[]
@@ -94,14 +97,9 @@ each_record(source_file) do |record|
         end
       end
     end
-    #print connected_records
   end
   cnt+=1
-  #if TOTAL % cnt == 0
-  #end
-  #RESULT
   if result.size==query.values.flatten.size
-    found+=1
     if opts[:connected]
       record.xpath('//datafield[@tag="762"]/subfield[@code="w"]').each do |e|
         connected_records << e.content
@@ -112,43 +110,32 @@ each_record(source_file) do |record|
     n=Nokogiri::XML(record.to_s, &:noblanks)
     ofile.puts(n.root.to_xml :indent => 4)
   end
-  #print "\rRecords: #{cnt+=1}"+"\t\t"+"Found: #{found}"
   bar.increment
-  #  if found > 1 && found % 10==0
-  #    bar.log "#{found} records found."
-  #  end
 end
 
-#print "\n"
-#print connected_records.to_s + "\n"
-#print result_records.to_s + "\n"
-#puts connected_records.size
-#puts result_records.size
-#i=(connected_records - result_records).uniq
-#print i.size.to_s + "\n"
-d=File.open("recs", "w") do |f|
-  f.write result_records.to_yaml
-  f.write connected_records.to_yaml
+if opts[:debug]
+  d=File.open("recs", "w") do |f|
+    f.write result_records.to_yaml
+    f.write connected_records.to_yaml
+  end
 end
-
-
+matched_individuals=0
+individuals=[]
 if opts[:connected]
-  puts "Looking for individual entries..."
-  bar2 = ProgressBar.create(title: "Found", :format => "%c of %C Records checked. -- %a | %B | %p%% %e", total: total, remainder_mark: '-', progress_mark: '#')
   individuals=(connected_records - result_records).uniq
   each_record(source_file) do |record|
     id=record.xpath('//controlfield[@tag="001"]')[0].content 
     if individuals.include?(id)
       n=Nokogiri::XML(record.to_s, &:noblanks)
       ofile.puts(n.root.to_xml :indent => 4)
+      matched_individuals+=1
     end
-    bar2.increment
+    bar.increment
   end
 end
-
 
 ofile.puts("</collection>")
 ofile.close
 puts ""
-puts "#{found} Records found!"
 
+puts "#{result_records.size+matched_individuals} Records found!"
