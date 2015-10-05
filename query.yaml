@@ -1,9 +1,18 @@
 #Schema MARC21-Tag = Regular Expression
 #Hint: negative query="^(?!.*?TERM).*"
-"005": "^2015"
-"100$a":
-  - "Bach, Johann Sebastian"
-"852$a": "^D-B$"
+
+
+700$a: "Becker, Carl Ferdinand"
+700$4: "fmo"
+852$a: "D-LEm"
+
+
+#"005": "^2015"
+#"100$a":
+#  - "Bach, Johann Sebastian"
+#"852$a": "^D-B$"
+
+#500$a: "Diese Musikquelle ist Gegenstand des DFG-Projekts .*Die Notenbestände der Dresdner Hofkirche und der Königlichen Privat-Musikaliensammlung"
 #561$a: 
 #  - "Fürsten- und Landesschule, Grimma"
 #852$c: "^(?!.*?Mus.Gri.).*"

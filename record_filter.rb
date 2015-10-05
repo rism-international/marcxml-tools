@@ -5,6 +5,8 @@ require 'nokogiri'
 require 'trollop'
 require 'ruby-progressbar'
 require 'rbconfig'
+require 'zip'
+
 OS=RbConfig::CONFIG['host_os']
 
 #OPTIONS
@@ -23,6 +25,7 @@ where [options] are:
   opt :debug, "Debugging mode", :default => false
   opt :infile, "Input-Filename", :type => :string
   opt :outfile, "Output-Filename", :type => :string, :default => "out.xml"
+  opt :zip, "compress file with zip", :default => false
 end
 Trollop::die :infile, "must exist; you can download it from https://opac.rism.info/fileadmin/user_upload/lod/update/rismAllMARCXML.zip" if !opts[:infile]
 source_file=opts[:infile]
@@ -137,5 +140,11 @@ end
 ofile.puts("</collection>")
 ofile.close
 puts ""
+if opts[:zip]
+  Zip::File.open(opts[:outfile].gsub(/.xml/, ".zip"), Zip::File::CREATE) do |zipfile|
+        zipfile.add(opts[:outfile], opts[:outfile])
+  end
+end
+
 
 puts "#{result_records.size+matched_individuals} Records found!"
