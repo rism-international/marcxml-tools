@@ -46,7 +46,9 @@ def change_leader(node)
   if leader
     leader.content="00000ccm a2200000   4500"
   else
-    #puts "Missing leader"
+    leader = Nokogiri::XML::Node.new "leader", node
+    leader.content="00000ccm a2200000   4500"
+    node.root << leader
   end
   leader
 end
@@ -97,7 +99,9 @@ if File.exists?(source_file)
     change_datafield(record, '762', '772')
     change_datafield(record, '035', '036')
     change_datafield(record, '504', '690')
+    change_subfield_code(record,'690', 'b', 'n')
     change_datafield(record, '510', '691')
+    change_subfield_code(record,'691', 'b', 'n')
     change_subfield_code(record,'773', 'a', 'w')
 
     #Sorting tags
