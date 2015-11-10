@@ -11,6 +11,8 @@ OS=RbConfig::CONFIG['host_os']
 NAMESPACE={'marc' => "http://www.loc.gov/MARC21/slim"}
 SCHEMA_FILE="MARC21slim.xsd"
 
+#Hack for resolving leader problems: sed -i '/<leader>00000cdd#a2200000###4500<\/leader>/c\<leader>00000ccm a2200000   4500<\/leader>' 050000.xml
+
 #OPTIONS
 opts = Trollop::options do
   version "RISM validator 1.0"
@@ -32,4 +34,5 @@ xsd = Nokogiri::XML::Schema(File.read(SCHEMA_FILE))
 
 xsd.validate(source_file).each do |error|
       puts "#{error.line} :: #{error.message}"
+      break
 end

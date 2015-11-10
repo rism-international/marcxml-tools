@@ -1,7 +1,7 @@
 #Schema MARC21-Tag = Regular Expression
 #Hint: negative query="^(?!.*?TERM).*"
 
-#"001": "806932613"
+"001": ".*"
 
 #"490$a": "^A/I$"
 #"852$a": "US-WS"
@@ -11,7 +11,7 @@
 #"005": "^2015"
 #"100$a":
 #  - "Bach, Johann Sebastian"
-"852$a": "^D-B$"
+#"852$a": "^D-B$"
 
 #500$a: "Diese Musikquelle ist Gegenstand des DFG-Projekts .*Die Notenbestände der Dresdner Hofkirche und der Königlichen Privat-Musikaliensammlung"
 #561$a: 
