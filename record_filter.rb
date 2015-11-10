@@ -8,6 +8,8 @@ require 'rbconfig'
 require 'zip'
 
 OS=RbConfig::CONFIG['host_os']
+NAMESPACE={'marc' => "http://www.loc.gov/MARC21/slim"}
+SCHEMA_FILE="MARC21slim.xsd"
 
 #OPTIONS
 opts = Trollop::options do
@@ -26,10 +28,25 @@ where [options] are:
   opt :infile, "Input-Filename", :type => :string
   opt :outfile, "Output-Filename", :type => :string, :default => "out.xml"
   opt :zip, "compress file with zip", :default => false
+  opt :validate, "validate xml with MARC21-schema", :default => false
 end
 Trollop::die :infile, "must exist; you can download it from https://opac.rism.info/fileadmin/user_upload/lod/update/rismAllMARCXML.zip" if !opts[:infile]
 source_file=opts[:infile]
 resfile=opts[:outfile]
+xsd = Nokogiri::XML::Schema(File.read(SCHEMA_FILE))
+
+if opts[:validate]
+  xsd.validate(source_file).each do |error|
+      puts "#{error.line} :: #{error.message}"
+  end
+  #end
+#  each_record(source_file) do |record|
+#    xsd.validate(record).each do |error|
+ #       puts error.message
+  #  end
+ # end
+  exit
+end
 
 query=YAML.load_file(opts[:query])
 print "\rCalculating total size..."
@@ -54,6 +71,9 @@ if opts[:connected]
   total=total * 2
 end
 
+
+
+
 connected_records=[]
 result_records=[]
 print "\rQuery: #{query}"
@@ -71,20 +91,20 @@ end
 
 cnt=1
 ofile=File.open(resfile, 'w')
-ofile.write('<?xml version="1.0" encoding="UTF-8"?>'+"\n"+'<collection>'+"\n")
+ofile.write('<?xml version="1.0" encoding="UTF-8"?>'+"\n"+'<collection xmlns="http://www.loc.gov/MARC21/slim">'+"\n")
 bar = ProgressBar.create(title: "Found", :format => "%c of %C Records checked. -- %a | %B | %p%% %e", total: total, remainder_mark: '-', progress_mark: '#')
 
 #QUERY
 each_record(source_file) do |record|
   result=[]
-  id=record.xpath('//controlfield[@tag="001"]')[0].content 
+  id=record.xpath('//marc:controlfield[@tag="001"]', NAMESPACE)[0].content 
   query.each do |k,v|
     if k.include?('$')
       df=k.split("$")[0]
       sf=k.split("$")[1]
-      res=record.xpath('//datafield[@tag="'+df+'"]/subfield[@code="'+sf+'"]')
+      res=record.xpath('//marc:datafield[@tag="'+df+'"]/marc:subfield[@code="'+sf+'"]', NAMESPACE)
     else
-      res=record.xpath('//controlfield[@tag="'+k+'"]')
+      res=record.xpath('//marc:controlfield[@tag="'+k+'"]', NAMESPACE)
     end
     res.each do |node|
       if v.class==String
@@ -104,14 +124,14 @@ each_record(source_file) do |record|
   cnt+=1
   if result.size==query.values.flatten.size
     if opts[:connected]
-      record.xpath('//datafield[@tag="762"]/subfield[@code="w"]').each do |e|
+      record.xpath('//marc:datafield[@tag="762"]/marc:subfield[@code="w"]', NAMESPACE).each do |e|
         connected_records << e.content
       end
     end
 
     result_records << id
     n=Nokogiri::XML(record.to_s, &:noblanks)
-    ofile.puts(n.root.to_xml :indent => 4)
+    ofile.puts(n.remove_namespaces!.root.to_xml :indent => 4)
   end
   bar.increment
 end
@@ -124,13 +144,14 @@ if opts[:debug]
 end
 matched_individuals=0
 individuals=[]
+
 if opts[:connected]
   individuals=(connected_records - result_records).uniq
   each_record(source_file) do |record|
-    id=record.xpath('//controlfield[@tag="001"]')[0].content 
+    id=record.xpath('//marc:controlfield[@tag="001"]', NAMESPACE)[0].content 
     if individuals.include?(id)
       n=Nokogiri::XML(record.to_s, &:noblanks)
-      ofile.puts(n.root.to_xml :indent => 4)
+      ofile.puts(n.remove_namespaces!.root.to_xml :indent => 4)
       matched_individuals+=1
     end
     bar.increment

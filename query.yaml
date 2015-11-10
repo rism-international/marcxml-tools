@@ -1,12 +1,13 @@
 #Schema MARC21-Tag = Regular Expression
 #Hint: negative query="^(?!.*?TERM).*"
 
+#"001": "806932613"
 
-700$a: "Becker, Carl Ferdinand"
-700$4: "fmo"
-852$a: "D-LEm"
-
-
+#"490$a": "^A/I$"
+#"852$a": "US-WS"
+#700$a: "Becker, Carl Ferdinand"
+#700$4: "fmo"
+#852$a: "D-LEm"
 #"005": "^2015"
 #"100$a":
 #  - "Bach, Johann Sebastian"
@@ -17,11 +18,11 @@
 #  - "Fürsten- und Landesschule, Grimma"
 #852$c: "^(?!.*?Mus.Gri.).*"
 
-#"100$a": "Mozart"
+"100$a": "Mozart"
 #"593$a": "print"
-#245$a: 
-#  - "Zauberflöte"
-#  - "Piano"
+245$a: 
+  - "Zauberflöte"
+  - "Piano"
 #"597$a": "Berlin"
 #100$a: "^(?!.*?André).*"
 #852$a: "D-OF"
