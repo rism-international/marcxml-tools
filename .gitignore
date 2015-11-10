@@ -1,6 +1,8 @@
 out.xml
 *.zip
 test.xml
+change.xml
+filter.xml
 tt
 recs
 in.xml

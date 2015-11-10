@@ -28,25 +28,11 @@ where [options] are:
   opt :infile, "Input-Filename", :type => :string
   opt :outfile, "Output-Filename", :type => :string, :default => "out.xml"
   opt :zip, "compress file with zip", :default => false
-  opt :validate, "validate xml with MARC21-schema", :default => false
 end
 Trollop::die :infile, "must exist; you can download it from https://opac.rism.info/fileadmin/user_upload/lod/update/rismAllMARCXML.zip" if !opts[:infile]
 source_file=opts[:infile]
 resfile=opts[:outfile]
 xsd = Nokogiri::XML::Schema(File.read(SCHEMA_FILE))
-
-if opts[:validate]
-  xsd.validate(source_file).each do |error|
-      puts "#{error.line} :: #{error.message}"
-  end
-  #end
-#  each_record(source_file) do |record|
-#    xsd.validate(record).each do |error|
- #       puts error.message
-  #  end
- # end
-  exit
-end
 
 query=YAML.load_file(opts[:query])
 print "\rCalculating total size..."

@@ -11,18 +11,18 @@
 #"005": "^2015"
 #"100$a":
 #  - "Bach, Johann Sebastian"
-#"852$a": "^D-B$"
+"852$a": "^D-B$"
 
 #500$a: "Diese Musikquelle ist Gegenstand des DFG-Projekts .*Die Notenbestände der Dresdner Hofkirche und der Königlichen Privat-Musikaliensammlung"
 #561$a: 
 #  - "Fürsten- und Landesschule, Grimma"
 #852$c: "^(?!.*?Mus.Gri.).*"
 
-"100$a": "Mozart"
+#"100$a": "Mozart"
 #"593$a": "print"
-245$a: 
-  - "Zauberflöte"
-  - "Piano"
+#245$a: 
+#  - "Zauberflöte"
+#  - "Piano"
 #"597$a": "Berlin"
 #100$a: "^(?!.*?André).*"
 #852$a: "D-OF"
