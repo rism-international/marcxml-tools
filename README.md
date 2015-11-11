@@ -40,3 +40,56 @@ For more options see `record_filter --help`.
 * Regular Expression: https://en.wikipedia.org/wiki/Regular_expression
 
 
+##How to use Record Filter
+
+First of all Ruby has to be installed. Then download the program file from github:
+
+git clone https://github.com/rism-t3/record_filter.git
+
+Inside the download you will find the file query.yaml. This yaml file contains configuration fields you will adjust for you search queries. Next you need the file which you want to browse. Normally this will be the XML file you downloaded from this link:
+
+https://opac.rism.info/index.php?id=8&L=1
+
+You can start with the file rismAllMARCXMLexample.zip for test purposes, because this file is much smaller than the original file. Unpack this file in your record filter folder. Let's assume you want to find all records from the library US-CA. Therefor you need to know the Marc21 field for libraries which is 852$a. So you type in the query.yaml file and save it:
+
+852$a: "US-CA"
+
+Back in the terminal you put in the command 
+
+ruby record_filter.rb -i rism_130616_example.xml
+
+With „-i“ you determine the input file. The default output file is called „out.xml“.  
+
+The command
+
+ruby record_filter.rb -h
+
+will show you more options we'll discuss later. In your output file out.xml there are now data sets which contains US-CA in field 852. This means it contains data sets with US-CAe for example as well. The reason for this is that the record finder works with regular expression. If you only want "US-CA" and nothing more you need to write:
+
+852$a: "US-CA$"
+
+Of course you can combine your queries. This will find all records with „Boccherini“ an „Us-CA“:
+
+100$a: "Boccherini"
+852$a: "US-CA$"
+
+The formula of MARC21 field 110$a is „familyname, first name“ so that you wouldn't get results with „Luigi Boccherini“. But „Boccherini, Luigi“ will work. Example:
+
+100$0: "Boccherini, Luigi"
+852$a: "US-CA"
+
+As mentioned above you'll get an option overview with the command
+
+ruby record_filter.rb -h
+
+Here the options in detail:
+
+-q: You can choose your own yaml file. Default file is query.yaml.
+-c: If there are connected individual entries they will be collected.
+-d: Shows additional error messages
+-i: Specify the name of your input file.
+-o: You can name your output file. Default file is out.xml
+-z: Compresses your file with zip.
+-v: Shows the recent version number of Record filter.
+
+
