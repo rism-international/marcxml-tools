@@ -48,7 +48,7 @@ def change_leader(node)
   else
     leader = Nokogiri::XML::Node.new "leader", node
     leader.content="00000ccm a2200000   4500"
-    node.root << leader
+    node.root.children.first.add_previous_sibling(leader)
   end
   leader
 end
