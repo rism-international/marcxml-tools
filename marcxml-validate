@@ -17,10 +17,10 @@ SCHEMA_FILE="MARC21slim.xsd"
 opts = Trollop::options do
   version "RISM validator 1.0"
   banner <<-EOS
-This utility program validates MARCXML
+This utility program validates MARCXML-files
 
 Usage:
-   record_search [options]
+   marcxml-validate [options]
 where [options] are:
   EOS
 

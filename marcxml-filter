@@ -18,7 +18,7 @@ opts = Trollop::options do
 This utility program searches the complete RISM open data XML-File with parameters of query.yaml
 
 Usage:
-   record_search [options]
+   marcxml-filter [options]
 where [options] are:
   EOS
 

@@ -24,7 +24,7 @@ opts = Trollop::options do
 This utility program changes MARCXML nodes
 
 Usage:
-   change [options]
+   marcxml-transform [options]
 where [options] are:
   EOS
 
