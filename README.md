@@ -1,4 +1,4 @@
-# RISM Record filter
+# RISM MARCXML-TOOLS
 
 RISM Marcxml-Tools is a set of command line utilities for managing MARCXML-files. 
 
