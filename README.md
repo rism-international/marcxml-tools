@@ -1,4 +1,4 @@
-# RISM MARCXML-TOOLS
+# RISM Marcxml-Tools
 
 RISM Marcxml-Tools is a set of command line utilities for managing MARCXML-files. 
 
@@ -44,8 +44,8 @@ datafields:
  #- "old_tag": "new_tag" eg.
  - "035": "136"
 subfields:
- #- "tag$old_code": "tag$new_code" eg.
- - "031$r": "031$g"
+ #- "tag$old_code": "new_code" eg.
+ - "031$r": "g"
 ```
 
 ## Installation

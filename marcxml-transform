@@ -111,7 +111,7 @@ if File.exists?(source_file)
       tags.each do |k,v|
         tag=k.split("$")[0]
         old_sf=k.split("$")[1]
-        new_sf=v.split("$")[1]
+        new_sf=v
         change_subfield_code(record, tag, old_sf, new_sf)
       end
     end
