@@ -24,7 +24,10 @@ where [options] are:
 
   opt :infile, "Input-Filename", :type => :string
   opt :outfile, "Output-Filename", :type => :string
+  opt :content, "With example content (currently not used)", :default => false
 end
+
+with_content=opts[:content]
 
 Trollop::die :infile, "must exist" if !opts[:infile]
 source_file=opts[:infile]
