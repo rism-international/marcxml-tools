@@ -27,12 +27,18 @@ Usage:
    marcxml-transform [options]
 where [options] are:
   EOS
-
+  opt :rules, "Query-Filename", :type => :string, :default => "transform.yaml"
   opt :infile, "Input-Filename", :type => :string
 end
 
 Trollop::die :infile, "must exist" if !opts[:infile]
 source_file=opts[:infile]
+
+
+
+transform=YAML.load_file(opts[:rules])
+
+print(transform)
 
 #
 def change_subfield_code(node, tag, old_code, new_code)
@@ -96,14 +102,19 @@ if File.exists?(source_file)
     change_leader(record)
     change_material(record)
     change_collection(record)
-    change_datafield(record, '762', '772')
-    change_datafield(record, '035', '036')
-    change_datafield(record, '504', '690')
-    change_subfield_code(record,'690', 'b', 'n')
-    change_datafield(record, '510', '691')
-    change_subfield_code(record,'691', 'b', 'n')
-    change_subfield_code(record,'773', 'a', 'w')
-
+    transform['datafields'].each do |tags|
+      tags.each do |k,v|
+        change_datafield(record, k, v)
+      end
+    end
+    transform['subfields'].each do |tags|
+      tags.each do |k,v|
+        tag=k.split("$")[0]
+        old_sf=k.split("$")[1]
+        new_sf=v.split("$")[1]
+        change_subfield_code(record, tag, old_sf, new_sf)
+      end
+    end
     #Sorting tags
     nodes = record.xpath("//marc:datafield", NAMESPACE).remove
     nodes.sort_by{|node| node.attr("tag")}.each{|node| 

@@ -25,7 +25,6 @@ __Example__: Query for all new records from Bach in Berlin, State Library in 201
 ```
 gives an output-XML-file with a subset of 476 records (as of October 2015). 
 
-
 Semantic structure:
 * Key is the Marc21 field (e.g. "100$a" or "005")
 * Value is a regular expression (e.g. "Mozart.\*"). Hint: regular expression for negative matching (e.g. `^(?!.*term).*$`), see: http://www.regular-expressions.info/lookaround.html. 
@@ -35,6 +34,19 @@ Query parameters (one per line) are combined with __"AND"__ logic.
 It is possible to look also for dependend records in a collection with the '-c' parameter.
 
 For more options see `record_filter --help`.
+
+## marcxml-transform
+Replaces Marc21 datafield tags and subfield codes according to rules defined by an YAML-file. Structure of the file is:
+
+```yaml
+#transform.yaml
+datafields:
+ #- "old_tag": "new_tag" eg.
+ - "035": "136"
+subfields:
+ #- "tag$old_code": "tag$new_code" eg.
+ - "031$r": "031$g"
+
 
 ## Installation
 
