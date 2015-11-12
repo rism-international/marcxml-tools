@@ -27,7 +27,7 @@ where [options] are:
   opt :infile, "Input-Filename", :type => :string
 end
 
-Trollop::die :infile, "must exist; you can download it from https://opac.rism.info/fileadmin/user_upload/lod/update/rismAllMARCXML.zip" if !opts[:infile]
+Trollop::die :infile, "must exist!" if !opts[:infile]
 source_file=opts[:infile]
 resfile=opts[:outfile]
 xsd = Nokogiri::XML::Schema(File.read(SCHEMA_FILE))

@@ -19,7 +19,7 @@ Usage:
 where [options] are:
   EOS
   opt :infiles, "Input-Filenames", :type => :strings
-  opt :outfile, "Output-Filename", :type => :string, :default => "merge_out.xml"
+  opt :outfile, "Output-Filename", :type => :string, :default => "out.xml"
   opt :size, "Amount of record", :default => 50000
 end
 
