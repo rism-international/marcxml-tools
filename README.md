@@ -1,8 +1,16 @@
 # RISM Record filter
 
-RISM record filter is a small command line utility for building a subset of records from the 
-complete XML open dataset of sources at http://opac.rism.info. 
+RISM Marcxml-Tools is a set of command line utilities for managing MARCXML-files. 
 
+This set contains
+
+* marcxml-filter: building a subset of records from the complete XML open dataset of sources at http://opac.rism.info. 
+* marcxml-merge: merging multiple marcxml-files into one file
+* marcxml-split: splitting large files in chunks
+* marcxml-transform: transforms Marcxml-files
+* marcxml-validate: validates a MARCXML-file
+
+## marcxml-filter
 Filtering rules are defined by key-value pairs in an YAML-configuration file (default: query.yaml). 
 
 __Example__: Query for all new records from Bach in Berlin, State Library in 2015:
