@@ -1,15 +1,17 @@
 #Schema MARC21-Tag = Regular Expression
 #Hint: negative query="^(?!.*?TERM).*"
 
-"001": ".*"
+#"001": ".*"
 
 #"001": "000100621"
 #700$a: "Becker, Carl Ferdinand"
 #700$4: "fmo"
-#852$a: "D-LEm"
+852$a: 
+  #- "D-Hs"
+  - "US-SA"
 
-100$0: "30000391"
-852$a: "US-CA$"
+#100$0: "30000391"
+#852$a: "US-CA$"
 
 #"490$a": "^A/I$"
 #"852$a": "US-WS"

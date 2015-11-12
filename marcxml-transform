@@ -27,15 +27,13 @@ Usage:
    marcxml-transform [options]
 where [options] are:
   EOS
-  opt :rules, "Query-Filename", :type => :string, :default => "transform.yaml"
+  opt :rules, "Transform-Filename", :type => :string, :default => "transform.yaml"
   opt :infile, "Input-Filename", :type => :string
+  opt :outfile, "Output-Filename", :type => :string, :default => "out.xml"
 end
 
 Trollop::die :infile, "must exist" if !opts[:infile]
 source_file=opts[:infile]
-
-
-
 transform=YAML.load_file(opts[:rules])
 
 print(transform)
@@ -95,7 +93,7 @@ end
 
 
 start = 0
-ofile=File.open("change.xml", "w")
+ofile=File.open(opts[:outfile], "w")
 ofile.write('<?xml version="1.0" encoding="UTF-8"?>'+"\n"+'<collection xmlns="http://www.loc.gov/MARC21/slim">'+"\n")
 if File.exists?(source_file)
   each_record(source_file) { |record|
