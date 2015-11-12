@@ -7,27 +7,19 @@ require 'ruby-progressbar'
 require 'rbconfig'
 require 'zip'
 
-
-
-# Split HUGE xml files into chunks
-# first argument is the file containing marc records
-# second is the model name
-# third is the offset to start from
-
-SIZE=50000
 NAMESPACE={'marc' => "http://www.loc.gov/MARC21/slim"}
 
 #OPTIONS
 opts = Trollop::options do
   version "RISM changer 1.0"
   banner <<-EOS
-This utility program changes MARCXML nodes
+This utility program changes MARCXML nodes according to an YAML file.
 
 Usage:
    marcxml-transform [options]
 where [options] are:
   EOS
-  opt :rules, "Transform-Filename", :type => :string, :default => "transform.yaml"
+  opt :rules, "YAML-file with transforming rules", :type => :string, :default => "transform.yaml"
   opt :infile, "Input-Filename", :type => :string
   opt :outfile, "Output-Filename", :type => :string, :default => "out.xml"
 end
@@ -36,9 +28,6 @@ Trollop::die :infile, "must exist" if !opts[:infile]
 source_file=opts[:infile]
 transform=YAML.load_file(opts[:rules])
 
-print(transform)
-
-#
 def change_subfield_code(node, tag, old_code, new_code)
   subfield=node.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{old_code}']", NAMESPACE)
   subfield.attr('code', new_code) if subfield
