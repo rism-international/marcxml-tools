@@ -58,7 +58,7 @@ if File.exists?(source_file)
       ofile.write("</collection>")
       ofile.close
       ofile=File.open("#{"%06d" % start}.xml", "w")
-      ofile.write('<collection xmlns="http://www.loc.gov/MARC21/slim">')
+      ofile.write('<?xml version="1.0" encoding="UTF-8"?>'+"\n"+'<collection xmlns="http://www.loc.gov/MARC21/slim">'+"\n")
     end
     #break if start==100
   }

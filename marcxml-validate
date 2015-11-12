@@ -32,7 +32,16 @@ source_file=opts[:infile]
 resfile=opts[:outfile]
 xsd = Nokogiri::XML::Schema(File.read(SCHEMA_FILE))
 
+#puts File.open(source_file) {|f| f.readline}
+
+if !Nokogiri::XML(File.open(source_file) {|f| f.readline}+"<b/>").errors.empty?
+  puts Nokogiri::XML(File.open(source_file) {|f| f.readline}+"<b/>").errors
+  puts "#{source_file} is not an XML file!"
+  exit
+end
+
 xsd.validate(source_file).each do |error|
       puts "#{error.line} :: #{error.message}"
-      break
+      exit
 end
+puts "#{source_file} is a valid MARCXML-file!"
