@@ -4,6 +4,7 @@ RISM Marcxml-Tools is a set of command line utilities for managing MARCXML-files
 
 This set contains
 
+* marcxml-analyze: gives report about tags and occurrances of a Marcxml-file
 * marcxml-filter: building a subset of records from the complete XML open dataset of sources at http://opac.rism.info. 
 * marcxml-merge: merging multiple marcxml-files into one file
 * marcxml-split: splitting large files in chunks
