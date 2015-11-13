@@ -28,10 +28,26 @@ Trollop::die :infile, "must exist" if !opts[:infile]
 source_file=opts[:infile]
 transform=YAML.load_file(opts[:rules])
 
-def change_subfield_code(node, tag, old_code, new_code)
+def rename_subfield_code(node, tag, old_code, new_code)
   subfield=node.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{old_code}']", NAMESPACE)
+  if !node.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{new_code}']", NAMESPACE).empty?
+    puts "WARNING: #{tag}$#{new_code} already exits!"
+  end
   subfield.attr('code', new_code) if subfield
   subfield
+end
+
+def move_subfield_to_tag(node, from_tag, tag)
+  ftag=from_tag.split("$")[0]
+  fcode=from_tag.split("$")[1]
+  target=node.xpath("//marc:datafield[@tag='#{tag}']", NAMESPACE)
+  source=node.xpath("//marc:datafield[@tag='#{ftag}']/marc:subfield[@code='#{fcode}']", NAMESPACE)
+
+  target.children.first.add_previous_sibling(source)
+  if node.xpath("//marc:datafield[@tag='#{ftag}']/marc:subfield[@code='*']", NAMESPACE).empty?
+    node.xpath("//marc:datafield[@tag='#{ftag}']", NAMESPACE).remove
+  end
+  target
 end
 
 def change_leader(node)
@@ -46,7 +62,10 @@ def change_leader(node)
   leader
 end
 
-def change_datafield(node, tag, new_tag)
+def rename_datafield(node, tag, new_tag)
+  if !node.xpath("//marc:datafield[@tag='#{new_tag}']", NAMESPACE).empty?
+    puts "WARNING: Tag #{new_tag} already exits!"
+  end
   datafield=node.xpath("//marc:datafield[@tag='#{tag}']", NAMESPACE)
   datafield.attr('tag', new_tag) if datafield
   datafield
@@ -89,17 +108,22 @@ if File.exists?(source_file)
     change_leader(record)
     change_material(record)
     change_collection(record)
-    transform['datafields'].each do |tags|
+    transform['rename datafields'].each do |tags|
       tags.each do |k,v|
-        change_datafield(record, k, v)
+        rename_datafield(record, k, v)
       end
     end
-    transform['subfields'].each do |tags|
+    transform['rename subfields'].each do |tags|
       tags.each do |k,v|
         tag=k.split("$")[0]
         old_sf=k.split("$")[1]
         new_sf=v
-        change_subfield_code(record, tag, old_sf, new_sf)
+        rename_subfield_code(record, tag, old_sf, new_sf)
+      end
+    end
+    transform['move subfields'].each do |tags|
+      tags.each do |k,v|
+        move_subfield_to_tag(record, k, v)
       end
     end
     #Sorting tags
