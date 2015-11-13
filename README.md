@@ -47,7 +47,7 @@ Replaces Marc21 datafield tags and subfield codes according to rules defined by 
 "rename subfields":
  #- "tag$old_code": "new_code" eg.
  - "031$r": "g"
-"move subfield":
+"move subfields":
  - "035$h": "100"
 ```
 
