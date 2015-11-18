@@ -17,22 +17,31 @@ SCHEMA_FILE="MARC21slim.xsd"
 opts = Trollop::options do
   version "RISM validator 1.0"
   banner <<-EOS
-This utility program validates MARCXML
+This utility program validates MARCXML-files
 
 Usage:
-   record_search [options]
+   marcxml-validate [options]
 where [options] are:
   EOS
 
   opt :infile, "Input-Filename", :type => :string
 end
 
-Trollop::die :infile, "must exist; you can download it from https://opac.rism.info/fileadmin/user_upload/lod/update/rismAllMARCXML.zip" if !opts[:infile]
+Trollop::die :infile, "must exist!" if !opts[:infile]
 source_file=opts[:infile]
 resfile=opts[:outfile]
 xsd = Nokogiri::XML::Schema(File.read(SCHEMA_FILE))
 
+#puts File.open(source_file) {|f| f.readline}
+
+if !Nokogiri::XML(File.open(source_file) {|f| f.readline}+"<b/>").errors.empty?
+  puts Nokogiri::XML(File.open(source_file) {|f| f.readline}+"<b/>").errors
+  puts "#{source_file} is not an XML file!"
+  exit
+end
+
 xsd.validate(source_file).each do |error|
       puts "#{error.line} :: #{error.message}"
-      break
+      exit
 end
+puts "#{source_file} is a valid MARCXML-file!"

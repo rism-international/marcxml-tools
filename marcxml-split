@@ -12,28 +12,22 @@ require 'zip'
 opts = Trollop::options do
   version "RISM splitter 1.0"
   banner <<-EOS
-This utility program splits MARCXML
+This utility program splits MARCXML files into chunks
 
 Usage:
-   split [options]
+   marcxml-split [options]
 where [options] are:
   EOS
-
   opt :infile, "Input-Filename", :type => :string
+  opt :size, "Amount of record", :default => 50000
 end
 
-Trollop::die :infile, "must exist; you can download it from https://opac.rism.info/fileadmin/user_upload/lod/update/rismAllMARCXML.zip" if !opts[:infile]
+Trollop::die :infile, "must exist" if !opts[:infile]
 source_file=opts[:infile]
 
 
 
 
-# Split HUGE xml files into chunks
-# first argument is the file containing marc records
-# second is the model name
-# third is the offset to start from
-
-SIZE=50000
 #Helper method to parse huge files with nokogiri
 def each_record(filename, &block)
   File.open(filename) do |file|
@@ -59,12 +53,12 @@ if File.exists?(source_file)
     ofile.write(doc.remove_namespaces!.root.to_xml :encoding => 'UTF-8')
     start+=1
     # IF splitting
-    if start % SIZE == 0
+    if start % opts[:size] == 0
       puts start
       ofile.write("</collection>")
       ofile.close
       ofile=File.open("#{"%06d" % start}.xml", "w")
-      ofile.write('<collection xmlns="http://www.loc.gov/MARC21/slim">')
+      ofile.write('<?xml version="1.0" encoding="UTF-8"?>'+"\n"+'<collection xmlns="http://www.loc.gov/MARC21/slim">'+"\n")
     end
     #break if start==100
   }

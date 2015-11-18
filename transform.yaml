@@ -1,0 +1,11 @@
+"rename datafields":
+  - "762": "772"
+  - "504": "690"
+  - "510": "691"
+"rename subfields":
+  - "690$b": "n"
+  - "691$b": "n"
+  - "773$a": "w"
+  - "035$a": "h"
+"move subfields":
+  - "035$h": "100"

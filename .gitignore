@@ -1,4 +1,5 @@
 out.xml
+*.yml
 *.zip
 test.xml
 change.xml
@@ -10,3 +11,4 @@ grimma.xml
 in.xml
 rism_*.xml
 0*.xml
+*0.xml

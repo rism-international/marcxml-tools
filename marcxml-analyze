@@ -1,0 +1,88 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'yaml'
+require 'nokogiri'
+require 'trollop'
+require 'ruby-progressbar'
+require 'rbconfig'
+require 'zip'
+
+OS=RbConfig::CONFIG['host_os']
+NAMESPACE={'marc' => "http://www.loc.gov/MARC21/slim"}
+SCHEMA_FILE="MARC21slim.xsd"
+
+#OPTIONS
+opts = Trollop::options do
+  version "RISM analyse 1.0"
+  banner <<-EOS
+This utility program gives all tags with amount of occurrances of an MARCXML-file to stdout
+
+Usage:
+   marcxml-analyze [options]
+where [options] are:
+  EOS
+
+  opt :infile, "Input-Filename", :type => :string
+  opt :outfile, "Output-Filename", :type => :string
+  opt :content, "With example content", :default => false
+end
+
+with_content=opts[:content]
+
+Trollop::die :infile, "must exist" if !opts[:infile]
+source_file=opts[:infile]
+
+#Helper method to parse huge files with nokogiri
+def each_record(filename, &block)
+  File.open(filename) do |file|
+    Nokogiri::XML::Reader.from_io(file).each do |node|
+      if node.name == 'record' and node.node_type == Nokogiri::XML::Reader::TYPE_ELEMENT
+        yield(Nokogiri::XML(node.outer_xml, nil, "UTF-8"))
+      end
+    end
+  end
+end
+
+ofile=File.open(opts[:outfile], 'w') if opts[:outfile]
+resdict=Hash.new(0)
+content_dict={}
+
+each_record(source_file) do |record|
+  record.xpath('//marc:controlfield', NAMESPACE).each do |node|
+    resdict[node["tag"]]+=1
+    if with_content && !content_dict.has_key?(node["tag"])
+      content_dict[node["tag"]]=node.content
+    end
+  end
+  record.xpath('//marc:datafield', NAMESPACE).each do |node|
+    if node.children
+      node.children.each do |sf|
+        if sf["code"]
+          resdict["#{node["tag"]}$#{sf["code"]}"]+=1
+          if with_content && !content_dict.has_key?("#{node["tag"]}$#{sf["code"]}")
+            content_dict["#{node["tag"]}$#{sf["code"]}"]=sf.content
+          end
+        end
+      end
+    end
+  end
+end
+
+#result=Hash[*(resdict.sort_by{|k,v| k}).flatten].to_yaml
+
+#print content_dict
+
+if with_content
+  resdict.each do |k,v|
+    resdict[k]=v.to_s + " (#{content_dict[k]})"
+  end
+end
+
+if ofile
+  ofile.write(Hash[*(resdict.sort_by{|k,v| k}).flatten].to_yaml)
+  ofile.close
+else
+  puts Hash[*(resdict.sort_by{|k,v| k}).flatten].to_yaml
+end
+puts "\nCompleted!"
+

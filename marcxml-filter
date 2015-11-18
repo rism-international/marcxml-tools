@@ -15,10 +15,10 @@ SCHEMA_FILE="MARC21slim.xsd"
 opts = Trollop::options do
   version "RISM record_filter 1.0"
   banner <<-EOS
-This utility program searches the complete RISM open data XML-File with parameters of query.yaml
+This utility program searches a MARCXML-File (e.g. the complete RISM open data) with parameters of query.yaml
 
 Usage:
-   record_search [options]
+   marcxml-filter [options]
 where [options] are:
   EOS
 
@@ -29,7 +29,7 @@ where [options] are:
   opt :outfile, "Output-Filename", :type => :string, :default => "out.xml"
   opt :zip, "compress file with zip", :default => false
 end
-Trollop::die :infile, "must exist; you can download it from https://opac.rism.info/fileadmin/user_upload/lod/update/rismAllMARCXML.zip" if !opts[:infile]
+Trollop::die :infile, "must exist; you can download e.g. the RISM Open Data set from https://opac.rism.info/fileadmin/user_upload/lod/update/rismAllMARCXML.zip" if !opts[:infile]
 source_file=opts[:infile]
 resfile=opts[:outfile]
 xsd = Nokogiri::XML::Schema(File.read(SCHEMA_FILE))
