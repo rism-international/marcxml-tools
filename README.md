@@ -1,4 +1,4 @@
-# RISM Record filter
+# RISM marcxml filter
 
 RISM record filter is a small command line utility for building a subset of records from the 
 complete XML open dataset of sources at http://opac.rism.info. 
@@ -26,7 +26,7 @@ Query parameters (one per line) are combined with __"AND"__ logic.
 
 It is possible to look also for dependend records in a collection with the '-c' parameter.
 
-For more options see `record_filter --help`.
+For more options see `marcxml_filter --help`.
 
 ## Installation
 
@@ -40,29 +40,29 @@ For more options see `record_filter --help`.
 * Regular Expression: https://en.wikipedia.org/wiki/Regular_expression
 
 
-##How to use Record Filter
+##How to use MarcXML-Filter
 
 First of all Ruby has to be installed. Then download the program file from github:
 
-git clone https://github.com/rism-t3/record_filter.git
+git clone https://github.com/rism-t3/marcxml-tools.git
 
 Inside the download you will find the file query.yaml. This yaml file contains configuration fields you will adjust for you search queries. Next you need the file which you want to browse. Normally this will be the XML file you downloaded from this link:
 
 https://opac.rism.info/index.php?id=8&L=1
 
-You can start with the file rismAllMARCXMLexample.zip for test purposes, because this file is much smaller than the original file. Unpack this file in your record filter folder. Let's assume you want to find all records from the library US-CA. Therefor you need to know the Marc21 field for libraries which is 852$a. So you type in the query.yaml file and save it:
+You can start with the file rismAllMARCXMLexample.zip for test purposes, because this file is much smaller than the original file. Unpack this file in your marcxml filter folder. Let's assume you want to find all records from the library US-CA. Therefor you need to know the Marc21 field for libraries which is 852$a. So you type in the query.yaml file and save it:
 
 852$a: "US-CA"
 
 Back in the terminal you put in the command 
 
-ruby record_filter.rb -i rism_130616_example.xml
+ruby marcxml_filter.rb -i rism_130616_example.xml
 
 With „-i“ you determine the input file. The default output file is called „out.xml“.  
 
 The command
 
-ruby record_filter.rb -h
+ruby marcxml_filter.rb -h
 
 will show you more options we'll discuss later. In your output file out.xml there are now data sets which contains US-CA in field 852. This means it contains data sets with US-CAe for example as well. The reason for this is that the record finder works with regular expression. If you only want "US-CA" and nothing more you need to write:
 
@@ -80,7 +80,7 @@ The formula of MARC21 field 110$a is „familyname, first name“ so that you wo
 
 As mentioned above you'll get an option overview with the command
 
-ruby record_filter.rb -h
+ruby marcxml_filter.rb -h
 
 Here the options in detail:
 
@@ -90,6 +90,6 @@ Here the options in detail:
 -i: Specify the name of your input file.
 -o: You can name your output file. Default file is out.xml
 -z: Compresses your file with zip.
--v: Shows the recent version number of Record filter.
+-v: Shows the recent version number of marcxml filter.
 
 
