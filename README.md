@@ -41,8 +41,9 @@ It is possible to look also for dependend records in a collection with the '-c' 
 
 For more options see `marcxml_filter --help`.
 
- ## marcxml-transform
-  Replaces Marc21 datafield tags and subfield codes according to rules defined by an YAML-file. Structure of the file is:
+# marcxml-transform
+
+Replaces Marc21 datafield tags and subfield codes according to rules defined by an YAML-file. Structure of the file is:
 
 ```yaml
 #transform.yaml
@@ -53,6 +54,7 @@ subfields:
  #- "tag$old_code": "new_code" eg.
  - "031$r": "g"
 
+```
 
 ## Installation
 
@@ -70,7 +72,7 @@ subfields:
 
 First of all Ruby has to be installed. Then download the program file from github:
 
-git clone https://github.com/rism-t3/marcxml-tools.git
+`git clone https://github.com/rism-t3/marcxml-tools.git`
 
 Inside the download you will find the file query.yaml. This yaml file contains configuration fields you will adjust for you search queries. Next you need the file which you want to browse. Normally this will be the XML file you downloaded from this link:
 
@@ -82,13 +84,13 @@ You can start with the file rismAllMARCXMLexample.zip for test purposes, because
 
 Back in the terminal you put in the command 
 
-ruby marcxml_filter -i rism_130616_example.xml
+`ruby marcxml_filter -i rism_130616_example.xml`
 
 With „-i“ you determine the input file. The default output file is called „out.xml“.  
 
 The command
 
-ruby marcxml_filter -h
+`ruby marcxml_filter -h`
 
 will show you more options that we'll discuss later. In your output file out.xml there are now data sets which contains US-CA in field 852. This means it contains data sets with US-CAe for example as well. The reason for this is that the record finder works with regular expression. If you only want "US-CA" and nothing more you need to write:
 
@@ -106,7 +108,7 @@ The formula of MARC21 field 110$a is „familyname, first name“ so that you wo
 
 As mentioned above you'll get an option overview with the command
 
-ruby marcxml_filter -h
+`ruby marcxml_filter -h`
 
 Here the options in detail:
 
