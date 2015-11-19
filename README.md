@@ -1,4 +1,17 @@
-# RISM marcxml filter
+# RISM MARCXML-Tools
+
++RISM MARCXML-Tools is a set of command line utilities for managing MARCXML-files.
+
+This set contains
+
+ * marcxml-analyze: gives report about tags and occurrances of a MARCXML-file
+ * marcxml-filter: building a subset of records from the complete XML open dataset of sources at http://opac.rism.info. 
+ * marcxml-merge: merging multiple MARCXML-files into one file
+ * marcxml-split: splitting large files into chunks
+ * marcxml-transform: transforms MARCXML-files
+ * marcxml-validate: validates a MARCXML-file
+
+# marcxml filter
 
 RISM record filter is a small command line utility for building a subset of records from the 
 complete XML open dataset of sources at http://opac.rism.info. 
@@ -28,6 +41,19 @@ It is possible to look also for dependend records in a collection with the '-c' 
 
 For more options see `marcxml_filter --help`.
 
+ ## marcxml-transform
+  Replaces Marc21 datafield tags and subfield codes according to rules defined by an YAML-file. Structure of the file is:
+
+```yaml
+#transform.yaml
+datafields:
+ #- "old_tag": "new_tag" eg.
+ - "035": "136"
+subfields:
+ #- "tag$old_code": "new_code" eg.
+ - "031$r": "g"
+
+
 ## Installation
 
 ###Requirements
@@ -56,15 +82,15 @@ You can start with the file rismAllMARCXMLexample.zip for test purposes, because
 
 Back in the terminal you put in the command 
 
-ruby marcxml_filter.rb -i rism_130616_example.xml
+ruby marcxml_filter -i rism_130616_example.xml
 
 With „-i“ you determine the input file. The default output file is called „out.xml“.  
 
 The command
 
-ruby marcxml_filter.rb -h
+ruby marcxml_filter -h
 
-will show you more options we'll discuss later. In your output file out.xml there are now data sets which contains US-CA in field 852. This means it contains data sets with US-CAe for example as well. The reason for this is that the record finder works with regular expression. If you only want "US-CA" and nothing more you need to write:
+will show you more options that we'll discuss later. In your output file out.xml there are now data sets which contains US-CA in field 852. This means it contains data sets with US-CAe for example as well. The reason for this is that the record finder works with regular expression. If you only want "US-CA" and nothing more you need to write:
 
 852$a: "US-CA$"
 
@@ -80,16 +106,16 @@ The formula of MARC21 field 110$a is „familyname, first name“ so that you wo
 
 As mentioned above you'll get an option overview with the command
 
-ruby marcxml_filter.rb -h
+ruby marcxml_filter -h
 
 Here the options in detail:
 
--q: You can choose your own yaml file. Default file is query.yaml.
--c: If there are connected individual entries they will be collected.
--d: Shows additional error messages
--i: Specify the name of your input file.
--o: You can name your output file. Default file is out.xml
--z: Compresses your file with zip.
--v: Shows the recent version number of marcxml filter.
+* -q: You can choose your own yaml file. Default file is query.yaml.
+* -c: If there are connected individual entries they will be collected.
+* -d: Shows additional error messages
+* -i: Specify the name of your input file.
+* -o: You can name your output file. Default file is out.xml
+* -z: Compresses your file with zip.
+* -v: Shows the recent version number of marcxml filter.
 
 
