@@ -12,3 +12,6 @@ in.xml
 rism_*.xml
 0*.xml
 *0.xml
+export.xml
+*.tar.gz
+ds*.xml

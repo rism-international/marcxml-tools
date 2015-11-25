@@ -25,6 +25,7 @@ where [options] are:
   opt :query, "Query-Filename", :type => :string, :default => "query.yaml"
   opt :connected, "Look for connected individual entries", :default=> false
   opt :debug, "Debugging mode", :default => false
+  opt :xor, "Search with logical OR", :default => false
   opt :infile, "Input-Filename", :type => :string
   opt :outfile, "Output-Filename", :type => :string, :default => "out.xml"
   opt :zip, "compress file with zip", :default => false
@@ -108,16 +109,30 @@ each_record(source_file) do |record|
     end
   end
   cnt+=1
-  if result.size==query.values.flatten.size
-    if opts[:connected]
-      record.xpath('//marc:datafield[@tag="762"]/marc:subfield[@code="w"]', NAMESPACE).each do |e|
-        connected_records << e.content
-      end
-    end
 
-    result_records << id
-    n=Nokogiri::XML(record.to_s, &:noblanks)
-    ofile.puts(n.remove_namespaces!.root.to_xml :indent => 4)
+  if opts[:xor]
+    if result.include?(true)
+      if opts[:connected]
+        record.xpath('//marc:datafield[@tag="762"]/marc:subfield[@code="w"]', NAMESPACE).each do |e|
+          connected_records << e.content
+        end
+      end
+      result_records << id
+      n=Nokogiri::XML(record.to_s, &:noblanks)
+      ofile.puts(n.remove_namespaces!.root.to_xml :indent => 4)
+    end
+  else
+    if result.size==query.values.flatten.size
+      if opts[:connected]
+        record.xpath('//marc:datafield[@tag="762"]/marc:subfield[@code="w"]', NAMESPACE).each do |e|
+          connected_records << e.content
+        end
+      end
+
+      result_records << id
+      n=Nokogiri::XML(record.to_s, &:noblanks)
+      ofile.puts(n.remove_namespaces!.root.to_xml :indent => 4)
+    end
   end
   bar.increment
 end

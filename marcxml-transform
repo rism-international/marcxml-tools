@@ -75,7 +75,7 @@ def change_collection(node)
   subfield=node.xpath("//marc:datafield[@tag='100']/marc:subfield[@code='a']", NAMESPACE)
   if subfield.text=='Collection'
     node.xpath("//marc:datafield[@tag='100']", NAMESPACE).remove
-    change_datafield(node, '240', '110')
+    rename_datafield(node, '240', '130')
   end
 end
 
@@ -121,9 +121,11 @@ if File.exists?(source_file)
         rename_subfield_code(record, tag, old_sf, new_sf)
       end
     end
-    transform['move subfields'].each do |tags|
-      tags.each do |k,v|
-        move_subfield_to_tag(record, k, v)
+    if transform['move subfields']
+      transform['move subfields'].each do |tags|
+        tags.each do |k,v|
+          move_subfield_to_tag(record, k, v)
+        end
       end
     end
     #Sorting tags
