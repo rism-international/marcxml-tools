@@ -105,22 +105,48 @@ ofile=File.open(opts[:outfile], "w")
 ofile.write('<?xml version="1.0" encoding="UTF-8"?>'+"\n"+'<collection xmlns="http://www.loc.gov/MARC21/slim">'+"\n")
 if File.exists?(source_file)
   each_record(source_file) { |record|
+    delete_flag=false
     change_leader(record)
     change_material(record)
     change_collection(record)
-    transform['rename datafields'].each do |tags|
-      tags.each do |k,v|
-        rename_datafield(record, k, v)
+
+    if transform['dropping records']
+      transform['dropping records'].each do |tags|
+        tags.each do |k,v|
+          tag=k.split("$")[0]
+          code=k.split("$")[1]
+          node=record.xpath("//marc:datafield[@tag='#{tag}']", NAMESPACE)
+          subfield_node=record.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{code}']", NAMESPACE)
+          if node.empty? || subfield_node.empty? || subfield_node.text.strip.empty?
+            puts record
+            delete_flag=true            
+          end
+        end
+      end
+      next if delete_flag
+    end
+
+
+
+    if transform['rename datafields']
+      transform['rename datafields'].each do |tags|
+        tags.each do |k,v|
+          rename_datafield(record, k, v)
+        end
       end
     end
-    transform['rename subfields'].each do |tags|
-      tags.each do |k,v|
-        tag=k.split("$")[0]
-        old_sf=k.split("$")[1]
-        new_sf=v
-        rename_subfield_code(record, tag, old_sf, new_sf)
+
+    if transform['rename subfields']
+      transform['rename subfields'].each do |tags|
+        tags.each do |k,v|
+          tag=k.split("$")[0]
+          old_sf=k.split("$")[1]
+         new_sf=v
+         rename_subfield_code(record, tag, old_sf, new_sf)
+        end
       end
     end
+
     if transform['move subfields']
       transform['move subfields'].each do |tags|
         tags.each do |k,v|
@@ -138,7 +164,7 @@ if File.exists?(source_file)
 
     ofile.write(doc.remove_namespaces!.root.to_xml :encoding => 'UTF-8')
     start+=1
-    puts start
+    #puts start
   }
   ofile.write("\n</collection>")
   ofile.close
