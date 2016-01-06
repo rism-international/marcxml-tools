@@ -6,8 +6,10 @@ require 'trollop'
 require 'ruby-progressbar'
 require 'rbconfig'
 require 'zip'
+require 'pry'
 
 NAMESPACE={'marc' => "http://www.loc.gov/MARC21/slim"}
+DELETE_ANONYMUS=true
 
 #OPTIONS
 opts = Trollop::options do
@@ -42,7 +44,6 @@ def move_subfield_to_tag(node, from_tag, tag)
   fcode=from_tag.split("$")[1]
   target=node.xpath("//marc:datafield[@tag='#{tag}']", NAMESPACE)
   source=node.xpath("//marc:datafield[@tag='#{ftag}']/marc:subfield[@code='#{fcode}']", NAMESPACE)
-
   target.children.first.add_previous_sibling(source)
   if node.xpath("//marc:datafield[@tag='#{ftag}']/marc:subfield[@code='*']", NAMESPACE).empty?
     node.xpath("//marc:datafield[@tag='#{ftag}']", NAMESPACE).remove
@@ -50,15 +51,61 @@ def move_subfield_to_tag(node, from_tag, tag)
   target
 end
 
+def check_material(node)
+  result = Hash.new
+  subfield=node.xpath("//marc:datafield[@tag='100']/marc:subfield[@code='a']", NAMESPACE)
+  if subfield.text=='Collection'
+    result[:level] = "c"
+  else
+    result[:level] = "m"
+  end
+  subfield=node.xpath("//marc:datafield[@tag='762']", NAMESPACE)
+  unless subfield.empty?
+    result[:level] = "c"
+  end
+
+  subfield=node.xpath("//marc:datafield[@tag='773']", NAMESPACE)
+  unless subfield.empty?
+    result[:level] = "d"
+  end
+
+  subfields=node.xpath("//marc:datafield[@tag='593']/marc:subfield[@code='a']", NAMESPACE)
+  material = []
+  subfields.each do |sf|
+    if sf.text =~ /manusc/
+      material << :manuscript
+    elsif sf.text =~ /print/
+      material << :print
+    else
+      material << :other
+    end
+  end
+  case
+    when material.include?(:manuscript) && material.include?(:print)
+      result[:type] = "p"
+    when material.include?(:manuscript) && !material.include?(:print)
+      result[:type] = "d"
+    else
+      result[:type] = "c"
+  end
+  return result
+end
+
+
+
 def change_leader(node)
   leader=node.xpath("//marc:leader", NAMESPACE)[0]
+  result=check_material(node)
+  code = "n#{result[:type]}#{result[:level]}"
+  raise "Leader code #{code} false" unless code.size == 3
   if leader
-    leader.content="00000ccm a2200000   4500"
+    leader.content="00000#{code} a2200000   4500"
   else
     leader = Nokogiri::XML::Node.new "leader", node
-    leader.content="00000ccm a2200000   4500"
+    leader.content="00000#{code} a2200000   4500"
     node.root.children.first.add_previous_sibling(leader)
   end
+  binding.pry
   leader
 end
 
@@ -79,10 +126,20 @@ def change_collection(node)
   end
 end
 
+def delete_anonymus(node)
+  subfield=node.xpath("//marc:datafield[@tag='100']/marc:subfield[@code='a']", NAMESPACE)
+  if subfield.text=='Anonymus'
+    node.xpath("//marc:datafield[@tag='100']", NAMESPACE).remove
+  end
+end
+
 def change_material(node)
   materials=node.xpath("//marc:datafield/marc:subfield[@code='8']", NAMESPACE)
   materials.each do |material|
-    material.content="%02d" % material.content.gsub("\\c", "") if material
+    begin
+      material.content="%02d" % material.content.gsub("\\c", "") if material
+    rescue ArgumentError
+    end
   end
 end
 
@@ -109,7 +166,7 @@ if File.exists?(source_file)
     change_leader(record)
     change_material(record)
     change_collection(record)
-
+    delete_anonymus(record) if DELETE_ANONYMUS
     if transform['dropping records']
       transform['dropping records'].each do |tags|
         tags.each do |k,v|

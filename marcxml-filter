@@ -58,9 +58,6 @@ if opts[:connected]
   total=total * 2
 end
 
-
-
-
 connected_records=[]
 result_records=[]
 print "\rQuery: #{query}"
