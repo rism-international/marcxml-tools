@@ -30,6 +30,7 @@ Trollop::die :infile, "must exist" if !opts[:infile]
 source_file=opts[:infile]
 transform=YAML.load_file(opts[:rules])
 
+print transform
 def rename_subfield_code(node, tag, old_code, new_code)
   subfield=node.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{old_code}']", NAMESPACE)
   if !node.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{new_code}']", NAMESPACE).empty?
@@ -39,12 +40,26 @@ def rename_subfield_code(node, tag, old_code, new_code)
   subfield
 end
 
+def change_content(node, tag, code, replacements)
+  nodes=node.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{code}']", NAMESPACE)
+  nodes.each do |n|
+    if replacements[n.text]
+      n.content = replacements[n.text]
+    end
+  end
+  nodes
+end
+
 def move_subfield_to_tag(node, from_tag, tag)
   ftag=from_tag.split("$")[0]
   fcode=from_tag.split("$")[1]
   target=node.xpath("//marc:datafield[@tag='#{tag}']", NAMESPACE)
   source=node.xpath("//marc:datafield[@tag='#{ftag}']/marc:subfield[@code='#{fcode}']", NAMESPACE)
-  target.children.first.add_previous_sibling(source)
+  if target.empty?
+    rename_datafield(node, ftag, tag) 
+  else
+    target.children.first.add_previous_sibling(source)
+  end
   if node.xpath("//marc:datafield[@tag='#{ftag}']/marc:subfield[@code='*']", NAMESPACE).empty?
     node.xpath("//marc:datafield[@tag='#{ftag}']", NAMESPACE).remove
   end
@@ -91,8 +106,6 @@ def check_material(node)
   return result
 end
 
-
-
 def change_leader(node)
   leader=node.xpath("//marc:leader", NAMESPACE)[0]
   result=check_material(node)
@@ -105,7 +118,6 @@ def change_leader(node)
     leader.content="00000#{code} a2200000   4500"
     node.root.children.first.add_previous_sibling(leader)
   end
-  binding.pry
   leader
 end
 
@@ -183,7 +195,14 @@ if File.exists?(source_file)
       next if delete_flag
     end
 
-
+    if transform["change content"]
+      transform['change content'].keys.each do |tags|
+          tag=tags.split("$")[0]
+          code=tags.split("$")[1]
+          replacements=transform['change content'][tags]
+          change_content(record, tag, code, replacements)
+      end
+    end
 
     if transform['rename datafields']
       transform['rename datafields'].each do |tags|
