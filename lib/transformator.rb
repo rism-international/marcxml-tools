@@ -46,6 +46,12 @@ class Transformator
     target
   end
 
+  def remove_subfield(ftag)
+    tag=ftag.split("$")[0]
+    code=ftag.split("$")[1]
+    node.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{code}']", NAMESPACE).remove
+  end
+
   def check_material
     result = Hash.new
     subfield=node.xpath("//marc:datafield[@tag='100']/marc:subfield[@code='a']", NAMESPACE)
@@ -114,7 +120,7 @@ class Transformator
     subfield=node.xpath("//marc:datafield[@tag='100']/marc:subfield[@code='a']", NAMESPACE)
     if subfield.text=='Collection'
       node.xpath("//marc:datafield[@tag='100']", NAMESPACE).remove
-      rename_datafield(node, '240', '130')
+      rename_datafield('240', '130')
     end
   end
 
@@ -134,6 +140,86 @@ class Transformator
       end
     end
   end
+
+  def zr_addition_change_attribution
+    subfield100=node.xpath("//marc:datafield[@tag='100']/marc:subfield[@code='j']", NAMESPACE)
+    subfield700=node.xpath("//marc:datafield[@tag='700']/marc:subfield[@code='j']", NAMESPACE)
+    subfield710=node.xpath("//marc:datafield[@tag='710']/marc:subfield[@code='g']", NAMESPACE)
+    subfield100.each { |sf| sf.content = convert_attribution(sf.content) }
+    subfield700.each { |sf| sf.content = convert_attribution(sf.content) }
+    subfield710.each { |sf| sf.content = convert_attribution(sf.content) }
+  end
+
+  def zr_addition_prefix_performance
+    subfield=node.xpath("//marc:datafield[@tag='518']/marc:subfield[@code='a']", NAMESPACE)
+    subfield.each { |sf| sf.content = "Performance date: #{sf.content}" }
+  end
+
+  def zr_addition_split_730
+    datafields = node.xpath("//marc:datafield[@tag='730']", NAMESPACE)
+    return 0 if datafields.empty?
+    datafields.each do |datafield|
+      hs = datafield.xpath("marc:subfield[@code='a']", NAMESPACE)
+      title = split_hs(hs.map(&:text).join(""))
+      hs.each { |sf| sf.content = title[:hs] }
+      if title[:sub]
+        sfk = Nokogiri::XML::Node.new "subfield", node
+        sfk['code'] = 'k'
+        sfk.content = title[:sub]
+        datafield << sfk
+      end
+      if title[:arr]
+        sfk = Nokogiri::XML::Node.new "subfield", node
+        sfk['code'] = 'o'
+        sfk.content = title[:arr]
+        datafield << sfk
+      end
+    end
+  end
+
+
+  def convert_attribution(str)
+    case str
+    when "e"
+      return "Ascertained"
+    when "z"
+      return "Doubtful"
+    when "g"
+      return "Verified"
+    when "f"
+      return "Misattributed"
+    when "a"
+      return "Alleged"
+    when "m"
+      return "Conjectural"
+    else
+      return str
+    end
+  end
+
+  def split_hs(str)
+    str.gsub!(/\?$/, "")
+    title={}
+    title[:hs] = str unless str.include?(".")
+    fields = str.split(".")
+    if fields.size == 2
+      title[:hs] = fields[0]
+      title[:sub] = fields[1].strip if fields[1].strip.size > 3
+      title[:arr] = fields[1].strip if fields[1].strip.size <= 3
+    elsif fields.size == 3
+      title[:hs] = fields[0]
+      title[:sub] = fields[1].strip
+      title[:arr] = fields[2].strip
+    else
+      title[:hs] = str
+    end
+    return title
+
+
+
+
+  end
+
 end
 
 

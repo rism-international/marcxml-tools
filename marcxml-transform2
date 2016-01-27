@@ -44,6 +44,10 @@ if File.exists?(source_file)
     tr.change_leader
     tr.change_material
     tr.change_collection
+    tr.zr_addition_change_attribution
+    tr.zr_addition_prefix_performance
+    tr.zr_addition_split_730
+
     tr.delete_anonymus if DELETE_ANONYMUS
     transform.each do |entry| 
       entry.each do |k,v|
@@ -58,6 +62,8 @@ if File.exists?(source_file)
             delete_flag=true            
           end
           next if delete_flag
+        elsif v=="-"
+          tr.remove_subfield(k)
         # Rename datafield
         elsif k.is_tag? && v.is_tag?
           tr.rename_datafield(k, v)
