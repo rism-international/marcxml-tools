@@ -155,6 +155,11 @@ class Transformator
     subfield.each { |sf| sf.content = "Performance date: #{sf.content}" }
   end
 
+  def zr_addition_add_isil
+    controlfield=node.xpath("//marc:controlfield[@tag='003']", NAMESPACE)
+    controlfield.each { |sf| sf.content = "DE-633" }
+  end
+
   def zr_addition_split_730
     datafields = node.xpath("//marc:datafield[@tag='730']", NAMESPACE)
     return 0 if datafields.empty?

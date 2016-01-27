@@ -47,6 +47,7 @@ if File.exists?(source_file)
     tr.zr_addition_change_attribution
     tr.zr_addition_prefix_performance
     tr.zr_addition_split_730
+    tr.zr_addition_add_isil
 
     tr.delete_anonymus if DELETE_ANONYMUS
     transform.each do |entry| 
