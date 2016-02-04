@@ -7,9 +7,12 @@ require 'ruby-progressbar'
 require 'rbconfig'
 require 'zip'
 require 'pry'
+require_relative 'lib/transformator'
+require_relative 'lib/xmlstream'
+require_relative 'lib/marc_string'
 
 NAMESPACE={'marc' => "http://www.loc.gov/MARC21/slim"}
-DELETE_ANONYMUS=true
+ZR_ADDITION=true
 
 #OPTIONS
 opts = Trollop::options do
@@ -21,7 +24,7 @@ Usage:
    marcxml-transform [options]
 where [options] are:
   EOS
-  opt :rules, "YAML-file with transforming rules", :type => :string, :default => "transform.yaml"
+  opt :rules, "YAML-file with transforming rules", :type => :string, :default => "conf/transform.yaml"
   opt :infile, "Input-Filename", :type => :string
   opt :outfile, "Output-Filename", :type => :string, :default => "out.xml"
 end
@@ -29,159 +32,31 @@ end
 Trollop::die :infile, "must exist" if !opts[:infile]
 source_file=opts[:infile]
 transform=YAML.load_file(opts[:rules])
-
-print transform
-def rename_subfield_code(node, tag, old_code, new_code)
-  subfield=node.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{old_code}']", NAMESPACE)
-  if !node.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{new_code}']", NAMESPACE).empty?
-    puts "WARNING: #{tag}$#{new_code} already exits!"
-  end
-  subfield.attr('code', new_code) if subfield
-  subfield
-end
-
-def change_content(node, tag, code, replacements)
-  nodes=node.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{code}']", NAMESPACE)
-  nodes.each do |n|
-    if replacements[n.text]
-      n.content = replacements[n.text]
-    end
-  end
-  nodes
-end
-
-def move_subfield_to_tag(node, from_tag, tag)
-  ftag=from_tag.split("$")[0]
-  fcode=from_tag.split("$")[1]
-  target=node.xpath("//marc:datafield[@tag='#{tag}']", NAMESPACE)
-  source=node.xpath("//marc:datafield[@tag='#{ftag}']/marc:subfield[@code='#{fcode}']", NAMESPACE)
-  if target.empty?
-    rename_datafield(node, ftag, tag) 
-  else
-    target.children.first.add_previous_sibling(source)
-  end
-  if node.xpath("//marc:datafield[@tag='#{ftag}']/marc:subfield[@code='*']", NAMESPACE).empty?
-    node.xpath("//marc:datafield[@tag='#{ftag}']", NAMESPACE).remove
-  end
-  target
-end
-
-def check_material(node)
-  result = Hash.new
-  subfield=node.xpath("//marc:datafield[@tag='100']/marc:subfield[@code='a']", NAMESPACE)
-  if subfield.text=='Collection'
-    result[:level] = "c"
-  else
-    result[:level] = "m"
-  end
-  subfield=node.xpath("//marc:datafield[@tag='762']", NAMESPACE)
-  unless subfield.empty?
-    result[:level] = "c"
-  end
-
-  subfield=node.xpath("//marc:datafield[@tag='773']", NAMESPACE)
-  unless subfield.empty?
-    result[:level] = "d"
-  end
-
-  subfields=node.xpath("//marc:datafield[@tag='593']/marc:subfield[@code='a']", NAMESPACE)
-  material = []
-  subfields.each do |sf|
-    if sf.text =~ /manusc/
-      material << :manuscript
-    elsif sf.text =~ /print/
-      material << :print
-    else
-      material << :other
-    end
-  end
-  case
-    when material.include?(:manuscript) && material.include?(:print)
-      result[:type] = "p"
-    when material.include?(:manuscript) && !material.include?(:print)
-      result[:type] = "d"
-    else
-      result[:type] = "c"
-  end
-  return result
-end
-
-def change_leader(node)
-  leader=node.xpath("//marc:leader", NAMESPACE)[0]
-  result=check_material(node)
-  code = "n#{result[:type]}#{result[:level]}"
-  raise "Leader code #{code} false" unless code.size == 3
-  if leader
-    leader.content="00000#{code} a2200000   4500"
-  else
-    leader = Nokogiri::XML::Node.new "leader", node
-    leader.content="00000#{code} a2200000   4500"
-    node.root.children.first.add_previous_sibling(leader)
-  end
-  leader
-end
-
-def rename_datafield(node, tag, new_tag)
-  if !node.xpath("//marc:datafield[@tag='#{new_tag}']", NAMESPACE).empty?
-    puts "WARNING: Tag #{new_tag} already exits!"
-  end
-  datafield=node.xpath("//marc:datafield[@tag='#{tag}']", NAMESPACE)
-  datafield.attr('tag', new_tag) if datafield
-  datafield
-end
-
-def change_collection(node)
-  subfield=node.xpath("//marc:datafield[@tag='100']/marc:subfield[@code='a']", NAMESPACE)
-  if subfield.text=='Collection'
-    node.xpath("//marc:datafield[@tag='100']", NAMESPACE).remove
-    rename_datafield(node, '240', '130')
-  end
-end
-
-def delete_anonymus(node)
-  subfield=node.xpath("//marc:datafield[@tag='100']/marc:subfield[@code='a']", NAMESPACE)
-  if subfield.text=='Anonymus'
-    node.xpath("//marc:datafield[@tag='100']", NAMESPACE).remove
-  end
-end
-
-def change_material(node)
-  materials=node.xpath("//marc:datafield/marc:subfield[@code='8']", NAMESPACE)
-  materials.each do |material|
-    begin
-      material.content="%02d" % material.content.gsub("\\c", "") if material
-    rescue ArgumentError
-    end
-  end
-end
-
-
-#Helper method to parse huge files with nokogiri
-def each_record(filename, &block)
-  File.open(filename) do |file|
-    Nokogiri::XML::Reader.from_io(file).each do |node|
-      if node.name == 'record' and node.node_type == Nokogiri::XML::Reader::TYPE_ELEMENT
-        yield(Nokogiri::XML(node.outer_xml, nil, "UTF-8"))
-      end
-    end
-  end
-end
-
-
-
 start = 0
 ofile=File.open(opts[:outfile], "w")
-ofile.write('<?xml version="1.0" encoding="UTF-8"?>'+"\n"+'<collection xmlns="http://www.loc.gov/MARC21/slim">'+"\n")
+print transform
+
 if File.exists?(source_file)
-  each_record(source_file) { |record|
+  xmlstream = Xmlstream.new(ofile)
+  xmlstream.each_record(source_file) do |record|
     delete_flag=false
-    change_leader(record)
-    change_material(record)
-    change_collection(record)
-    delete_anonymus(record) if DELETE_ANONYMUS
-    if transform['dropping records']
-      transform['dropping records'].each do |tags|
-        tags.each do |k,v|
+    tr = Transformator.new(record)
+    tr.change_leader
+    tr.change_material
+    tr.change_collection
+    if ZR_ADDITION
+      tr.zr_addition_change_attribution
+      tr.zr_addition_prefix_performance
+      tr.zr_addition_split_730
+      tr.zr_addition_add_isil
+      tr.zr_addition_change_593_abbreviation
+      tr.delete_anonymus
+    end
+
+    transform.each do |entry| 
+      entry.each do |k,v|
+        # Delete if node not exits
+        if !v
           tag=k.split("$")[0]
           code=k.split("$")[1]
           node=record.xpath("//marc:datafield[@tag='#{tag}']", NAMESPACE)
@@ -190,62 +65,46 @@ if File.exists?(source_file)
             puts record
             delete_flag=true            
           end
-        end
-      end
-      next if delete_flag
-    end
-
-    if transform["change content"]
-      transform['change content'].keys.each do |tags|
-          tag=tags.split("$")[0]
-          code=tags.split("$")[1]
-          replacements=transform['change content'][tags]
-          change_content(record, tag, code, replacements)
-      end
-    end
-
-    if transform['rename datafields']
-      transform['rename datafields'].each do |tags|
-        tags.each do |k,v|
-          rename_datafield(record, k, v)
-        end
-      end
-    end
-
-    if transform['rename subfields']
-      transform['rename subfields'].each do |tags|
-        tags.each do |k,v|
+          next if delete_flag
+        elsif v=="-"
+          tr.remove_subfield(k)
+        # Rename datafield
+        elsif k.is_tag? && v.is_tag?
+          tr.rename_datafield(k, v)
+        # Rename subfield
+        elsif k.is_tag_with_subfield? && v.is_subfield?
           tag=k.split("$")[0]
           old_sf=k.split("$")[1]
-         new_sf=v
-         rename_subfield_code(record, tag, old_sf, new_sf)
+          new_sf=v
+          tr.rename_subfield_code(tag, old_sf, new_sf)
+        # Move subfield
+        elsif k.is_tag_with_subfield? && v.is_tag?
+          tr.move_subfield_to_tag(k, v)
         end
+
+
       end
+
+
     end
 
-    if transform['move subfields']
-      transform['move subfields'].each do |tags|
-        tags.each do |k,v|
-          move_subfield_to_tag(record, k, v)
-        end
-      end
-    end
+
+    #    if transform["change content"]
+    #      transform['change content'].keys.each do |tags|
+    #          tag=tags.split("$")[0]
+    #          code=tags.split("$")[1]
+    #          replacements=transform['change content'][tags]
+    #          tr.change_content(code, replacements)
+    #      end
+    #    end
     #Sorting tags
-    nodes = record.xpath("//marc:datafield", NAMESPACE).remove
-    nodes.sort_by{|node| node.attr("tag")}.each{|node| 
-      record.root.add_child(node)}
-    doc = Nokogiri::XML.parse(record.to_s) do |config|
-      config.noblanks
+    unless delete_flag
+      nodes = record.xpath("//marc:datafield", NAMESPACE).remove
+      xmlstream.append(record, nodes)
     end
-
-    ofile.write(doc.remove_namespaces!.root.to_xml :encoding => 'UTF-8')
-    start+=1
-    #puts start
-  }
-  ofile.write("\n</collection>")
-  ofile.close
+  end
+  xmlstream.close
   puts "\nCompleted: "+Time.new.strftime("%Y-%m-%d %H:%M:%S")
-
 else
   puts source_file + " is not a file!"
 end
