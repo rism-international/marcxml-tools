@@ -150,6 +150,11 @@ class Transformator
     subfield710.each { |sf| sf.content = convert_attribution(sf.content) }
   end
 
+  def zr_addition_change_593_abbreviation
+    subfield=node.xpath("//marc:datafield[@tag='593']/marc:subfield[@code='a']", NAMESPACE)
+    subfield.each { |sf| sf.content = convert_593_abbreviation(sf.content) }
+  end
+
   def zr_addition_prefix_performance
     subfield=node.xpath("//marc:datafield[@tag='518']/marc:subfield[@code='a']", NAMESPACE)
     subfield.each { |sf| sf.content = "Performance date: #{sf.content}" }
@@ -201,6 +206,24 @@ class Transformator
       return str
     end
   end
+
+  def convert_593_abbreviation(str)
+    case str
+    when "mw"
+      return "other type"
+    when "mt"
+      return "theoreticum, handwritten"
+    when "ml"
+      return "libretto, handwritten"
+    when "mu"
+      return "theoreticum, printed"
+    when "mv"
+      return "unknown"
+    else
+      return str
+    end
+  end
+
 
   def split_hs(str)
     str.gsub!(/\?$/, "")

@@ -12,7 +12,7 @@ require_relative 'lib/xmlstream'
 require_relative 'lib/marc_string'
 
 NAMESPACE={'marc' => "http://www.loc.gov/MARC21/slim"}
-DELETE_ANONYMUS=true
+ZR_ADDITION=true
 
 #OPTIONS
 opts = Trollop::options do
@@ -44,12 +44,15 @@ if File.exists?(source_file)
     tr.change_leader
     tr.change_material
     tr.change_collection
-    tr.zr_addition_change_attribution
-    tr.zr_addition_prefix_performance
-    tr.zr_addition_split_730
-    tr.zr_addition_add_isil
+    if ZR_ADDITION
+      tr.zr_addition_change_attribution
+      tr.zr_addition_prefix_performance
+      tr.zr_addition_split_730
+      tr.zr_addition_add_isil
+      tr.zr_addition_change_593_abbreviation
+      tr.delete_anonymus
+    end
 
-    tr.delete_anonymus if DELETE_ANONYMUS
     transform.each do |entry| 
       entry.each do |k,v|
         # Delete if node not exits
