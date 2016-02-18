@@ -22,12 +22,12 @@ Usage:
 where [options] are:
   EOS
 
-  opt :query, "Query-Filename", :type => :string, :default => "query.yaml"
+  opt :query, "Query-Filename", :type => :string, :default => "conf/query.yaml"
   opt :connected, "Look for connected individual entries", :default=> false
   opt :debug, "Debugging mode", :default => false
   opt :xor, "Search with logical OR", :default => false
   opt :infile, "Input-Filename", :type => :string
-  opt :outfile, "Output-Filename", :type => :string, :default => "out.xml"
+  opt :outfile, "Output-Filename", :type => :string, :default => "export/out.xml"
   opt :zip, "compress file with zip", :default => false
 end
 Trollop::die :infile, "must exist; you can download e.g. the RISM Open Data set from https://opac.rism.info/fileadmin/user_upload/lod/update/rismAllMARCXML.zip" if !opts[:infile]

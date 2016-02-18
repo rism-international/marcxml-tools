@@ -155,6 +155,12 @@ class Transformator
     subfield.each { |sf| sf.content = convert_593_abbreviation(sf.content) }
   end
 
+  def zr_addition_change_gender
+    subfield=node.xpath("//marc:datafield[@tag='039']/marc:subfield[@code='a']", NAMESPACE)
+    subfield.each { |sf| sf.content = convert_gender(sf.content) }
+  end
+
+
   def zr_addition_prefix_performance
     subfield=node.xpath("//marc:datafield[@tag='518']/marc:subfield[@code='a']", NAMESPACE)
     subfield.each { |sf| sf.content = "Performance date: #{sf.content}" }
@@ -223,6 +229,18 @@ class Transformator
       return str
     end
   end
+
+  def convert_gender(str)
+    case str
+    when "m"
+      return "male"
+    when "f"
+      return "female"
+    else
+      return "unknown"
+    end
+  end
+
 
 
   def split_hs(str)

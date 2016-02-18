@@ -50,6 +50,7 @@ if File.exists?(source_file)
       tr.zr_addition_split_730
       tr.zr_addition_add_isil
       tr.zr_addition_change_593_abbreviation
+      tr.zr_addition_change_gender if opts[:rules] =~ /person/
       tr.delete_anonymus
     end
 

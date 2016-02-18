@@ -18,3 +18,4 @@ rism_*.xml
 export.xml
 ds*.xml
 outtest.xml
+input/
