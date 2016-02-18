@@ -234,7 +234,7 @@ class Transformator
     case str
     when "m"
       return "male"
-    when "f"
+    when "w"
       return "female"
     else
       return "unknown"
