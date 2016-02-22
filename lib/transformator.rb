@@ -160,6 +160,42 @@ class Transformator
     subfield.each { |sf| sf.content = convert_gender(sf.content) }
   end
 
+  def zr_addition_change_035
+    refs = []
+    subfields=node.xpath("//marc:datafield[@tag='035']/marc:subfield[@code='a']", NAMESPACE)
+    subfields.each do |sf|
+      if sf.content =~ /; /
+        content = sf.content.gsub("(DE-588a)(VIAF)", "(VIAF)")
+        content.split("; ").each do |e|
+          refs << {e.split(')')[0][1..-1] => e.split(')')[1] }
+        end
+      else
+        content = sf.content.gsub("(DE-588a)(VIAF)", "(VIAF)")
+        content.split("; ").each do |e|
+          refs << {e.split(')')[0][1..-1] => e.split(')')[1] }
+        end
+      end
+    end
+    refs.each do |h|
+      h.each do |k,v|
+        tag_024 = Nokogiri::XML::Node.new "datafield", node
+        tag_024['tag'] = '024'
+        tag_024['ind1'] = ' '
+        tag_024['ind2'] = ' '
+        sfa = Nokogiri::XML::Node.new "subfield", node
+        sfa['code'] = 'a'
+        sfa.content = v
+        sf2 = Nokogiri::XML::Node.new "subfield", node
+        sf2['code'] = '2'
+        sf2.content = k
+        tag_024 << sfa << sf2
+        subfields.first.parent.add_previous_sibling(tag_024)
+      end
+    end
+    node.xpath("//marc:datafield[@tag='035']", NAMESPACE).first.remove unless subfields.empty?
+  end
+
+
 
   def zr_addition_prefix_performance
     subfield=node.xpath("//marc:datafield[@tag='518']/marc:subfield[@code='a']", NAMESPACE)
