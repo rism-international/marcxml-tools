@@ -180,14 +180,14 @@ class Transformator
       h.each do |k,v|
         tag_024 = Nokogiri::XML::Node.new "datafield", node
         tag_024['tag'] = '024'
-        tag_024['ind1'] = ' '
+        tag_024['ind1'] = '7'
         tag_024['ind2'] = ' '
         sfa = Nokogiri::XML::Node.new "subfield", node
         sfa['code'] = 'a'
         sfa.content = v
         sf2 = Nokogiri::XML::Node.new "subfield", node
         sf2['code'] = '2'
-        sf2.content = k
+        sf2.content = k.gsub("DE-588a", "DNB")
         tag_024 << sfa << sf2
         subfields.first.parent.add_previous_sibling(tag_024)
       end
