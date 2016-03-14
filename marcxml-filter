@@ -6,6 +6,7 @@ require 'trollop'
 require 'ruby-progressbar'
 require 'rbconfig'
 require 'zip'
+require 'pry'
 
 OS=RbConfig::CONFIG['host_os']
 NAMESPACE={'marc' => "http://www.loc.gov/MARC21/slim"}

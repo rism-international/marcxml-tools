@@ -141,6 +141,34 @@ class Transformator
     end
   end
 
+  def zr_addition_change_scoring
+    scoring = node.xpath("//marc:datafield[@tag='594']/marc:subfield[@code='a']", NAMESPACE)
+    scoring.each do |tag|
+      entries = tag.content.split(/,(?=\s\D)/)
+      entries.each do |entry|
+        instr = entry.split("(").first
+        amount = entry.gsub(/.+\((\w+)\)/, '\1')
+        tag = Nokogiri::XML::Node.new "datafield", node
+        tag['tag'] = '594'
+        tag['ind1'] = ' '
+        tag['ind2'] = ' '
+        sfa = Nokogiri::XML::Node.new "subfield", node
+        sfa['code'] = 'a'
+        sfa.content = instr.strip
+        sf2 = Nokogiri::XML::Node.new "subfield", node
+        sf2['code'] = 'b'
+        sf2.content = amount==instr ? 1 : amount
+        tag << sfa << sf2
+        node.root << tag
+      end
+    end
+    rnode = node.xpath("//marc:datafield[@tag='594']", NAMESPACE).first
+    rnode.remove if rnode
+  end
+
+
+
+
   def zr_addition_change_attribution
     subfield100=node.xpath("//marc:datafield[@tag='100']/marc:subfield[@code='j']", NAMESPACE)
     subfield700=node.xpath("//marc:datafield[@tag='700']/marc:subfield[@code='j']", NAMESPACE)

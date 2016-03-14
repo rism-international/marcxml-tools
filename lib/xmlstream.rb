@@ -22,7 +22,8 @@ class Xmlstream
   alias :read :each_record
 
   def append(record, nodes)
-    nodes.sort_by{|node| node.attr("tag")}.each{|node| 
+
+    nodes.sort_by{|node| [node.attr("tag"), nodes.index(node)]}.each{|node| 
       record.root.add_child(node)}
     doc = Nokogiri::XML.parse(record.to_s) do |config|
       config.noblanks

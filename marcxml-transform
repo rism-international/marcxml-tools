@@ -53,6 +53,7 @@ if File.exists?(source_file)
       tr.zr_addition_change_gender if opts[:rules] =~ /person/
       tr.zr_addition_change_035 if opts[:rules] =~ /person/
       tr.delete_anonymus
+      tr.zr_addition_change_scoring
     end
 
     transform.each do |entry| 
@@ -83,22 +84,9 @@ if File.exists?(source_file)
         elsif k.is_tag_with_subfield? && v.is_tag?
           tr.move_subfield_to_tag(k, v)
         end
-
-
       end
-
-
     end
 
-
-    #    if transform["change content"]
-    #      transform['change content'].keys.each do |tags|
-    #          tag=tags.split("$")[0]
-    #          code=tags.split("$")[1]
-    #          replacements=transform['change content'][tags]
-    #          tr.change_content(code, replacements)
-    #      end
-    #    end
     #Sorting tags
     unless delete_flag
       nodes = record.xpath("//marc:datafield", NAMESPACE).remove
