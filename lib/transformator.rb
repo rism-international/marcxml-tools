@@ -153,17 +153,17 @@ class Transformator
         tag['ind1'] = ' '
         tag['ind2'] = ' '
         sfa = Nokogiri::XML::Node.new "subfield", node
-        sfa['code'] = 'a'
+        sfa['code'] = 'b'
         sfa.content = instr.strip
         sf2 = Nokogiri::XML::Node.new "subfield", node
-        sf2['code'] = 'b'
+        sf2['code'] = 'c'
         sf2.content = amount==instr ? 1 : amount
         tag << sfa << sf2
         node.root << tag
       end
     end
-    rnode = node.xpath("//marc:datafield[@tag='594']", NAMESPACE).first
-    rnode.remove if rnode
+    #rnode = node.xpath("//marc:datafield[@tag='594']", NAMESPACE).first
+    #rnode.remove if rnode
   end
 
 
