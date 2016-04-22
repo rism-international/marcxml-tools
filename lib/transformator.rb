@@ -188,6 +188,12 @@ class Transformator
     subfield.each { |sf| sf.content = convert_gender(sf.content) }
   end
 
+  def zr_addition_change_individualize
+    subfield=node.xpath("//marc:datafield[@tag='042']/marc:subfield[@code='a']", NAMESPACE)
+    subfield.each { |sf| sf.content = convert_individualize(sf.content) }
+  end
+
+
   def zr_addition_change_035
     refs = []
     subfields=node.xpath("//marc:datafield[@tag='035']/marc:subfield[@code='a']", NAMESPACE)
@@ -257,6 +263,18 @@ class Transformator
     end
   end
 
+  def zr_addition_person_add_profession
+    datafields = node.xpath("//marc:datafield[@tag='559']", NAMESPACE)
+    return 0 if datafields.empty?
+    datafields.each do |datafield|
+      sfk = Nokogiri::XML::Node.new "subfield", node
+      sfk['code'] = 'i'
+      sfk.content = "profession"
+      datafield << sfk
+    end
+  end
+
+
 
   def convert_attribution(str)
     case str
@@ -300,6 +318,17 @@ class Transformator
       return "male"
     when "w"
       return "female"
+    else
+      return "unknown"
+    end
+  end
+
+  def convert_individualize(str)
+    case str
+    when "a"
+      return "individualized"
+    when "b"
+      return "not individualized"
     else
       return "unknown"
     end

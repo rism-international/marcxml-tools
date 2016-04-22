@@ -51,7 +51,9 @@ if File.exists?(source_file)
       tr.zr_addition_add_isil
       tr.zr_addition_change_593_abbreviation
       tr.zr_addition_change_gender if opts[:rules] =~ /person/
+      tr.zr_addition_change_individualize if opts[:rules] =~ /person/
       tr.zr_addition_change_035 if opts[:rules] =~ /person/
+      tr.zr_addition_person_add_profession if opts[:rules] =~ /person/
       tr.delete_anonymus
       tr.zr_addition_change_scoring
     end
