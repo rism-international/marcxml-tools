@@ -229,6 +229,17 @@ class Transformator
     node.xpath("//marc:datafield[@tag='035']", NAMESPACE).first.remove unless subfields.empty?
   end
 
+  def zr_addition_change_243
+    tags=node.xpath("//marc:datafield[@tag='243']", NAMESPACE)
+    tags.each do |sf|
+      sfa = Nokogiri::XML::Node.new "subfield", node
+      sfa['code'] = 'g'
+      sfa.content = "RAK"
+      sf << sfa
+      tags.attr("tag", "730")
+    end
+  end
+
 
 
   def zr_addition_prefix_performance
@@ -248,6 +259,10 @@ class Transformator
       hs = datafield.xpath("marc:subfield[@code='a']", NAMESPACE)
       title = split_hs(hs.map(&:text).join(""))
       hs.each { |sf| sf.content = title[:hs] }
+      sfk = Nokogiri::XML::Node.new "subfield", node
+      sfk['code'] = 'g'
+      sfk.content = "RISM"
+      datafield << sfk
       if title[:sub]
         sfk = Nokogiri::XML::Node.new "subfield", node
         sfk['code'] = 'k'
@@ -274,6 +289,17 @@ class Transformator
     end
   end
 
+  def zr_addition_remove_empty_linked_fields
+    taglist = %w(100 690 691 700 710)
+    taglist.each do |tag|
+      datafields = node.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='0']", NAMESPACE)
+      datafields.each do |df|
+        if df.content.empty?
+          df.parent.remove
+        end
+      end
+    end
+  end
 
 
   def convert_attribution(str)
@@ -286,7 +312,7 @@ class Transformator
       return "Verified"
     when "f"
       return "Misattributed"
-    when "a"
+    when "l"
       return "Alleged"
     when "m"
       return "Conjectural"

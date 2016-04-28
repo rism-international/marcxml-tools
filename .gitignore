@@ -19,3 +19,4 @@ export.xml
 ds*.xml
 outtest.xml
 input/
+export/
