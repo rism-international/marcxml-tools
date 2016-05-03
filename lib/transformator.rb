@@ -193,6 +193,10 @@ class Transformator
     subfield.each { |sf| sf.content = convert_individualize(sf.content) }
   end
 
+  def zr_addition_catalogue_change_media
+    subfield=node.xpath("//marc:datafield[@tag='337']/marc:subfield[@code='a']", NAMESPACE)
+    subfield.each { |sf| sf.content = convert_media(sf.content) }
+  end
 
   def zr_addition_change_035
     refs = []
@@ -357,6 +361,25 @@ class Transformator
       return "not individualized"
     else
       return "unknown"
+    end
+  end
+
+  def convert_media(str)
+    case str
+    when "0"
+      return "Printed book"
+    when "ae"
+      return "Sheet music"
+    when "1"
+      return "Manuscript"
+    when "er"
+      return "Electronic resource"
+    when "aj"
+      return "CD-ROM"
+    when "ak"
+      return "Combination"
+    else
+      return "Other"
     end
   end
 

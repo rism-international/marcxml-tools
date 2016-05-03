@@ -63,6 +63,10 @@ if File.exists?(source_file)
         tr.zr_addition_change_035
         tr.zr_addition_person_add_profession
       end
+      if opts[:rules] =~ /catalogue/
+        tr.zr_addition_catalogue_change_media
+      end
+
     end
 
     if transform
