@@ -10,6 +10,7 @@ require 'pry'
 require_relative 'lib/transformator'
 require_relative 'lib/xmlstream'
 require_relative 'lib/marc_string'
+require_relative 'lib/oracle_db'
 
 NAMESPACE={'marc' => "http://www.loc.gov/MARC21/slim"}
 ZR_ADDITION=true
@@ -37,6 +38,7 @@ ofile=File.open(opts[:outfile], "w")
 print transform
 
 if File.exists?(source_file)
+  connection = OracleDB.new.connection if !connection
   xmlstream = Xmlstream.new(ofile)
   xmlstream.each_record(source_file) do |record|
     delete_flag=false
@@ -62,7 +64,8 @@ if File.exists?(source_file)
         tr.zr_addition_change_individualize
         tr.zr_addition_change_035
         tr.zr_addition_person_add_profession
-        tr.zr_addition_person_split_510
+        tr.zr_addition_person_split_510(connection)
+        tr.zr_addition_person_add_670_id(connection)
       end
       if opts[:rules] =~ /catalogue/
         tr.zr_addition_catalogue_change_media
@@ -109,6 +112,7 @@ if File.exists?(source_file)
       xmlstream.append(record, nodes)
     end
   end
+  connection.close
   xmlstream.close
   puts "\nCompleted: "+Time.new.strftime("%Y-%m-%d %H:%M:%S")
 else

@@ -1,8 +1,7 @@
-#!/usr/bin/env ruby
+# encoding: UTF-8
 require 'rubygems'
 require 'nokogiri'
 require 'rbconfig'
-require_relative 'oracle_db'
 
 class Transformator
   attr_accessor :node, :namespace, :connection
@@ -294,10 +293,9 @@ class Transformator
     end
   end
 
-  def zr_addition_person_split_510
+  def zr_addition_person_split_510(connection)
     scoring = node.xpath("//marc:datafield[@tag='510']/marc:subfield[@code='a']", NAMESPACE)
     return 0 if scoring.empty?
-    connection = OracleDB.new.connection if !connection
     scoring.each do |tag|
       entries = tag.content.split("; ")
       entries.each do |entry|
@@ -326,6 +324,69 @@ class Transformator
     rnode = node.xpath("//marc:datafield[@tag='510']", NAMESPACE).first
     rnode.remove if rnode
   end
+
+  def zr_addition_person_add_670_id(connection)
+    lit_ids = {
+      "Brown-StrattonBMB" => 1480, 
+      "DEUMM/b suppl." => 2957,
+      "DEUMM/b" => 1577,          
+      "ČSHS" => 1625,
+      "EitnerQ" => 1272,
+      "FétisB|2" => 1574,
+      "FétisB|2 suppl." => 995,
+      "Frank-AltmannTL|1|5 suppl." => 2497,
+      "Frank-AltmannTL|1|5" => 2497,
+      "Grove|6" => 1258,
+      "Grove|7" => 3072,                                  
+      "Kutsch-RiemensGSL|4" => 30026016,
+      "MCL" => 1635,
+      "MGG" => 1263,
+      "MGG suppl." => 2495,
+      "MGG|2/p" => 3828,                                                          
+      "MGG|2/s" => 1290,
+      "MGG|2 suppl." => 30020107,                                              
+      "RISM A/I" => 3806,
+      "RISM A/I suppl." => 3808,
+      "RISM B/I" => 30000057,
+      "SCHML" => 3013,
+      "Sohlmans|2" => 1282,
+      "StiegerO" => 1231,
+      "RiemannL|1|2/p" => 408,
+      "RiemannL|1|2/p suppl." => 2496,
+      "RiemannL|1|3" => 30026906,
+      "VollhardtC 1899" => 1624
+    }
+
+    scoring = node.xpath("//marc:datafield[@tag='670']/marc:subfield[@code='a']", NAMESPACE)
+    return 0 if scoring.empty?
+    scoring.each do |tag|
+      entry = tag.content.split(": ")[0]
+      fd = tag.content.split(": ")[1]
+      if lit_ids.include?(entry)
+        a0001=lit_ids[entry]
+      else
+        puts entry
+        return 0 if !entry || entry.empty?
+        curs = connection.exec("select a0001 from akprpd where a0376=:1", entry.force_encoding("ISO-8859-1"))
+        if db = curs.fetch_hash
+          a0001 = db['A0001']
+          curs.close
+        else
+          next
+        end
+      end
+      sf0 = Nokogiri::XML::Node.new "subfield", node
+      sf0['code'] = 'w'
+      sf0.content = a0001
+      tag.add_next_sibling(sf0)
+      sfb = Nokogiri::XML::Node.new "subfield", node
+      sfb['code'] = 'b'
+      sfb.content = fd
+      tag.add_next_sibling(sfb)
+      tag.content = entry
+    end
+  end
+
 
 
   def zr_addition_remove_empty_linked_fields
@@ -418,7 +479,7 @@ class Transformator
     end
   end
 
-
+  
 
   def split_hs(str)
     str.gsub!(/\?$/, "")
