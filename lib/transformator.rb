@@ -2,9 +2,10 @@
 require 'rubygems'
 require 'nokogiri'
 require 'rbconfig'
+require_relative 'oracle_db'
 
 class Transformator
-  attr_accessor :node, :namespace
+  attr_accessor :node, :namespace, :connection
   def initialize(node, namespace={'marc' => "http://www.loc.gov/MARC21/slim"})
     @namespace = namespace
     @node = node
@@ -292,6 +293,40 @@ class Transformator
       datafield << sfk
     end
   end
+
+  def zr_addition_person_split_510
+    scoring = node.xpath("//marc:datafield[@tag='510']/marc:subfield[@code='a']", NAMESPACE)
+    return 0 if scoring.empty?
+    connection = OracleDB.new.connection if !connection
+    scoring.each do |tag|
+      entries = tag.content.split("; ")
+      entries.each do |entry|
+        curs = connection.exec("select k0001 from ksprpd where bvsigl='#{entry}'")
+        if db = curs.fetch_hash
+          k0001 = db['K0001']
+          curs.close
+          tag = Nokogiri::XML::Node.new "datafield", node
+          tag['tag'] = '510'
+          tag['ind1'] = ' '
+          tag['ind2'] = ' '
+          sfa = Nokogiri::XML::Node.new "subfield", node
+          sfa['code'] = 'a'
+          sfa.content = entry.strip
+          tag << sfa
+          sf0 = Nokogiri::XML::Node.new "subfield", node
+          sf0['code'] = '0'
+          sf0.content = k0001
+          tag << sf0
+          node.root << tag
+        else
+          next
+        end
+      end
+    end
+    rnode = node.xpath("//marc:datafield[@tag='510']", NAMESPACE).first
+    rnode.remove if rnode
+  end
+
 
   def zr_addition_remove_empty_linked_fields
     taglist = %w(100 690 691 700 710)

@@ -62,6 +62,7 @@ if File.exists?(source_file)
         tr.zr_addition_change_individualize
         tr.zr_addition_change_035
         tr.zr_addition_person_add_profession
+        tr.zr_addition_person_split_510
       end
       if opts[:rules] =~ /catalogue/
         tr.zr_addition_catalogue_change_media
