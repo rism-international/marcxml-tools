@@ -57,6 +57,7 @@ if File.exists?(source_file)
         tr.delete_anonymus
         tr.zr_addition_change_scoring
         tr.zr_addition_remove_empty_linked_fields
+        tr.zr_addition_transfer_url
       end
 
       if opts[:rules] =~ /person/
@@ -112,7 +113,6 @@ if File.exists?(source_file)
       xmlstream.append(record, nodes)
     end
   end
-  connection.close
   xmlstream.close
   puts "\nCompleted: "+Time.new.strftime("%Y-%m-%d %H:%M:%S")
 else

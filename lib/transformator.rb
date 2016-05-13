@@ -244,7 +244,36 @@ class Transformator
     end
   end
 
-
+  def zr_addition_transfer_url
+    subfields=node.xpath("//marc:datafield[@tag='856']/marc:subfield[@code='u']", NAMESPACE)
+    subfields.each do |sf|
+      sf2 = Nokogiri::XML::Node.new "subfield", node
+      sf2['code'] = 'z'
+      sf2.content = 'DIGITALISAT'
+      sf.parent << sf2
+    end
+    subfields=node.xpath("//marc:datafield[@tag='500']/marc:subfield[@code='a']", NAMESPACE)
+    subfields.each do |sf|
+      if sf.content.ends_with_url?
+        puts sf.content
+        urlbem = sf.content.split(": ")[0]
+        url = sf.content.split(": ")[1]
+        tag_856 = Nokogiri::XML::Node.new "datafield", node
+        tag_856['tag'] = '856'
+        tag_856['ind1'] = '0'
+        tag_856['ind2'] = ' '
+        sfa = Nokogiri::XML::Node.new "subfield", node
+        sfa['code'] = 'u'
+        sfa.content = url
+        sf2 = Nokogiri::XML::Node.new "subfield", node
+        sf2['code'] = 'z'
+        sf2.content = urlbem
+        tag_856 << sfa << sf2
+        node.root << tag_856
+        sf.parent.remove
+      end
+    end
+  end
 
   def zr_addition_prefix_performance
     subfield=node.xpath("//marc:datafield[@tag='518']/marc:subfield[@code='a']", NAMESPACE)
