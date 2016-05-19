@@ -1,0 +1,17 @@
+#!/bin/bash
+
+echo "Compare two analyze-texts to stdout"
+echo "Parameters: oldfile newfile model"
+
+mkdir -p /tmp/dataset_1
+mkdir -p /tmp/dataset_2
+tar xzf $1 -C /tmp/dataset_1 export/muscat/"$3"_analyze.txt --strip-components 2 
+tar xzf $2 -C /tmp/dataset_2 export/muscat/"$3"_analyze.txt --strip-components 2
+
+echo "#----OLD----#" > /tmp/ds1
+echo "#----NEW----#" > /tmp/ds2
+
+grep "^[#'0-9]" /tmp/dataset_1/"$3"_analyze.txt  >> /tmp/ds1 
+grep "^[#'0-9]" /tmp/dataset_2/"$3"_analyze.txt  >> /tmp/ds2 
+
+paste  /tmp/ds1 /tmp/ds2 | column -c 10 -s $'\t' -t 2>&1
