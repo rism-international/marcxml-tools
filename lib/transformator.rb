@@ -285,6 +285,12 @@ class Transformator
     controlfield.each { |sf| sf.content = "DE-633" }
   end
 
+  def zr_addition_change_cataloging_source 
+    subfield=node.xpath("//marc:datafield[@tag='040']/marc:subfield[@code='a']", NAMESPACE)
+    subfield.each { |sf| sf.content = "DE-633" }
+  end
+
+
   def zr_addition_split_730
     datafields = node.xpath("//marc:datafield[@tag='730']", NAMESPACE)
     return 0 if datafields.empty?

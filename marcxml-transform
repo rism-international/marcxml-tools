@@ -67,9 +67,13 @@ if File.exists?(source_file)
         tr.zr_addition_person_add_profession
         tr.zr_addition_person_split_510(connection)
         tr.zr_addition_person_add_670_id(connection)
+        tr.zr_addition_change_cataloging_source 
       end
       if opts[:rules] =~ /catalogue/
         tr.zr_addition_catalogue_change_media
+      end
+      if opts[:rules] =~ /institution/
+        tr.zr_addition_change_cataloging_source 
       end
 
     end
