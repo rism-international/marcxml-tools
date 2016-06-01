@@ -30,6 +30,10 @@ class Transformator
     nodes
   end
 
+  def change_html_tags
+    entities = {"&gt;" => "]", "&lt;" => "["}
+  end
+
   def move_subfield_to_tag(from_tag, tag)
     ftag=from_tag.split("$")[0]
     fcode=from_tag.split("$")[1]
@@ -51,6 +55,11 @@ class Transformator
     code=ftag.split("$")[1]
     node.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{code}']", NAMESPACE).remove
   end
+
+  def remove_datafield(tag)
+    node.xpath("//marc:datafield[@tag='#{tag}']", NAMESPACE).remove
+  end
+
 
   def check_material
     result = Hash.new

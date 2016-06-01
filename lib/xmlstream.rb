@@ -25,7 +25,8 @@ class Xmlstream
 
     nodes.sort_by{|node| [node.attr("tag"), nodes.index(node)]}.each{|node| 
       record.root.add_child(node)}
-    doc = Nokogiri::XML.parse(record.to_s) do |config|
+    record_string = record.to_s.gsub("&lt;", "[").gsub("&gt;", "]")
+    doc = Nokogiri::XML.parse(record_string) do |config|
       config.noblanks
     end
     ofile.write(doc.remove_namespaces!.root.to_xml :encoding => 'UTF-8')

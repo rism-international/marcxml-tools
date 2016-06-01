@@ -71,6 +71,7 @@ if File.exists?(source_file)
       end
       if opts[:rules] =~ /catalogue/
         tr.zr_addition_catalogue_change_media
+        tr.remove_datafield("508")
       end
       if opts[:rules] =~ /institution/
         tr.zr_addition_change_cataloging_source 
