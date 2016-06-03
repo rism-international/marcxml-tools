@@ -18,5 +18,7 @@ rism_*.xml
 export.xml
 ds*.xml
 outtest.xml
+*.log
+bb.xml
 input/
 export/

@@ -37,6 +37,8 @@ start = 0
 ofile=File.open(opts[:outfile], "w")
 print transform
 
+bar = ProgressBar.create(title: "Found", :format => "%c of %C Records checked. -- %a | %B | %p%% %e", total: 1045000, remainder_mark: '-', progress_mark: '#')
+
 if File.exists?(source_file)
   connection = OracleDB.new.connection if !connection
   xmlstream = Xmlstream.new(ofile)
@@ -56,8 +58,9 @@ if File.exists?(source_file)
         tr.zr_addition_change_593_abbreviation
         tr.delete_anonymus
         tr.zr_addition_change_scoring
-        tr.zr_addition_remove_empty_linked_fields
+        #tr.zr_addition_remove_empty_linked_fields
         tr.zr_addition_transfer_url
+        tr.remove_unlinked_authorities
       end
 
       if opts[:rules] =~ /person/
@@ -112,11 +115,14 @@ if File.exists?(source_file)
       end
     end
 
+    tr.zr_addition_move_852c if opts[:rules] =~ /source/
+    
     #Sorting tags
     unless delete_flag
       nodes = record.xpath("//marc:datafield", NAMESPACE).remove
       xmlstream.append(record, nodes)
     end
+    bar.increment
   end
   xmlstream.close
   puts "\nCompleted: "+Time.new.strftime("%Y-%m-%d %H:%M:%S")

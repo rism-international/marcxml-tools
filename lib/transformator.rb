@@ -2,8 +2,10 @@
 require 'rubygems'
 require 'nokogiri'
 require 'rbconfig'
+require_relative 'logging'
 
 class Transformator
+  include Logging
   attr_accessor :node, :namespace, :connection
   def initialize(node, namespace={'marc' => "http://www.loc.gov/MARC21/slim"})
     @namespace = namespace
@@ -28,10 +30,6 @@ class Transformator
       end
     end
     nodes
-  end
-
-  def change_html_tags
-    entities = {"&gt;" => "]", "&lt;" => "["}
   end
 
   def move_subfield_to_tag(from_tag, tag)
@@ -264,7 +262,7 @@ class Transformator
     subfields=node.xpath("//marc:datafield[@tag='500']/marc:subfield[@code='a']", NAMESPACE)
     subfields.each do |sf|
       if sf.content.ends_with_url?
-        puts sf.content
+        #puts sf.content
         urlbem = sf.content.split(": ")[0]
         url = sf.content.split(": ")[1]
         tag_856 = Nokogiri::XML::Node.new "datafield", node
@@ -409,7 +407,7 @@ class Transformator
       if lit_ids.include?(entry)
         a0001=lit_ids[entry]
       else
-        puts entry
+        #puts entry
         return 0 if !entry || entry.empty?
         curs = connection.exec("select a0001 from akprpd where a0376=:1", entry.force_encoding("ISO-8859-1"))
         if db = curs.fetch_hash
@@ -433,17 +431,56 @@ class Transformator
 
 
 
+  def remove_unlinked_authorities
+    tags = %w(100$0 504$0 510$0 700$0 710$0 852$x)
+    tags.each do |tag|
+      df, sf = tag.split("$")
+      nodes = node.xpath("//marc:datafield[@tag='#{df}']", NAMESPACE)
+      nodes.each do |n|
+        subfield = n.xpath("marc:subfield[@code='#{sf}']", NAMESPACE)
+        if !subfield || subfield.empty? ||subfield.first.content.empty?
+          rism_id = node.xpath("//marc:controlfield[@tag='001']", NAMESPACE).first.content
+          logger.debug("EMPTY AUTHORITY NODE in #{rism_id}: #{n.to_s}")
+          n.remove
+        end
+      end
+    end
+  end
+
+
+  #DEPRECATED
   def zr_addition_remove_empty_linked_fields
     taglist = %w(100 690 691 700 710)
     taglist.each do |tag|
       datafields = node.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='0']", NAMESPACE)
       datafields.each do |df|
+        puts df
         if df.content.empty?
+          binding.pry
           df.parent.remove
         end
       end
     end
   end
+
+  def zr_addition_move_852c
+    fields = node.xpath("//marc:datafield[@tag='852']/marc:subfield[@code='p']", NAMESPACE)
+    if fields.size > 1
+      fields[1..-1].each do |field|
+        tag = Nokogiri::XML::Node.new "datafield", node
+        tag['tag'] = '591'
+        tag['ind1'] = ' '
+        tag['ind2'] = ' '
+        sfa = Nokogiri::XML::Node.new "subfield", node
+        sfa['code'] = 'a'
+        sfa.content = field.content
+        tag << sfa
+        node.root << tag
+        field.remove
+      end
+    end
+  end
+
 
 
   def convert_attribution(str)
