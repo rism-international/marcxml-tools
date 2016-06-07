@@ -37,7 +37,7 @@ start = 0
 ofile=File.open(opts[:outfile], "w")
 print transform
 
-bar = ProgressBar.create(title: "Found", :format => "%c of %C Records checked. -- %a | %B | %p%% %e", total: 1045000, remainder_mark: '-', progress_mark: '#')
+bar = ProgressBar.create(title: "Found", :format => "%c of %C Records checked. -- %a | %B | %p%% %e", total: 1050000, remainder_mark: '-', progress_mark: '#')
 
 if File.exists?(source_file)
   connection = OracleDB.new.connection if !connection

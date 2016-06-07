@@ -15,7 +15,7 @@ class Transformator
 
   def rename_subfield_code(tag, old_code, new_code)
     subfield=node.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{old_code}']", NAMESPACE)
-    if !node.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{new_code}']", NAMESPACE).empty?
+    if !subfield.empty? && !node.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{new_code}']", NAMESPACE).empty?
       puts "WARNING: #{tag}$#{new_code} already exits!"
     end
     subfield.attr('code', new_code) if subfield
@@ -441,7 +441,14 @@ class Transformator
         if !subfield || subfield.empty? ||subfield.first.content.empty?
           rism_id = node.xpath("//marc:controlfield[@tag='001']", NAMESPACE).first.content
           logger.debug("EMPTY AUTHORITY NODE in #{rism_id}: #{n.to_s}")
-          n.remove
+          if df == '510' and n.xpath("marc:subfield[@code='a']", NAMESPACE).first.content == 'RISM B/I'
+            sf0 = Nokogiri::XML::Node.new "subfield", node
+            sf0['code'] = '0'
+            sf0.content = "30000057"
+            n << sf0
+          else
+            n.remove
+          end
         end
       end
     end
