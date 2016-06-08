@@ -438,7 +438,8 @@ class Transformator
       nodes = node.xpath("//marc:datafield[@tag='#{df}']", NAMESPACE)
       nodes.each do |n|
         subfield = n.xpath("marc:subfield[@code='#{sf}']", NAMESPACE)
-        if !subfield || subfield.empty? ||subfield.first.content.empty?
+        if !subfield || subfield.empty? || (subfield.first.content.empty? || !(subfield.first.content =~ /^[0-9]+$/))
+          binding.pry
           rism_id = node.xpath("//marc:controlfield[@tag='001']", NAMESPACE).first.content
           logger.debug("EMPTY AUTHORITY NODE in #{rism_id}: #{n.to_s}")
           if df == '510' and n.xpath("marc:subfield[@code='a']", NAMESPACE).first.content == 'RISM B/I'
