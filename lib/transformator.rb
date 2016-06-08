@@ -80,7 +80,7 @@ class Transformator
     subfields=node.xpath("//marc:datafield[@tag='593']/marc:subfield[@code='a']", NAMESPACE)
     material = []
     subfields.each do |sf|
-      if sf.text =~ /manusc/
+      if (sf.text =~ /manusc/) || (sf.text =~ /autog/)
         material << :manuscript
       elsif sf.text =~ /print/
         material << :print
@@ -439,7 +439,6 @@ class Transformator
       nodes.each do |n|
         subfield = n.xpath("marc:subfield[@code='#{sf}']", NAMESPACE)
         if !subfield || subfield.empty? || (subfield.first.content.empty? || !(subfield.first.content =~ /^[0-9]+$/))
-          binding.pry
           rism_id = node.xpath("//marc:controlfield[@tag='001']", NAMESPACE).first.content
           logger.debug("EMPTY AUTHORITY NODE in #{rism_id}: #{n.to_s}")
           if df == '510' and n.xpath("marc:subfield[@code='a']", NAMESPACE).first.content == 'RISM B/I'
@@ -472,19 +471,24 @@ class Transformator
   end
 
   def zr_addition_move_852c
-    fields = node.xpath("//marc:datafield[@tag='852']/marc:subfield[@code='p']", NAMESPACE)
-    if fields.size > 1
-      fields[1..-1].each do |field|
-        tag = Nokogiri::XML::Node.new "datafield", node
-        tag['tag'] = '591'
-        tag['ind1'] = ' '
-        tag['ind2'] = ' '
-        sfa = Nokogiri::XML::Node.new "subfield", node
-        sfa['code'] = 'a'
-        sfa.content = field.content
-        tag << sfa
-        node.root << tag
-        field.remove
+    fields = node.xpath("//marc:datafield[@tag='852']", NAMESPACE)
+    fields.each do |field|
+      subfields = field.xpath("marc:subfield[@code='p']", NAMESPACE)
+      if subfields.size > 1
+        rism_id = node.xpath("//marc:controlfield[@tag='001']", NAMESPACE).first.content
+        logger.debug("DUBLICATE SHELFMARK NODE in #{rism_id}: #{field.to_s}")
+        subfields[1..-1].each do |subfield|
+          tag = Nokogiri::XML::Node.new "datafield", node
+          tag['tag'] = '591'
+          tag['ind1'] = ' '
+          tag['ind2'] = ' '
+          sfa = Nokogiri::XML::Node.new "subfield", node
+          sfa['code'] = 'a'
+          sfa.content = subfield.content
+          tag << sfa
+          node.root << tag
+          subfield.remove
+        end
       end
     end
   end

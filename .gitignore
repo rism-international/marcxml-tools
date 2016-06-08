@@ -20,5 +20,6 @@ ds*.xml
 outtest.xml
 *.log
 bb.xml
+*.log.*
 input/
 export/
