@@ -11,6 +11,7 @@ require_relative 'lib/transformator'
 require_relative 'lib/xmlstream'
 require_relative 'lib/marc_string'
 require_relative 'lib/oracle_db'
+require_relative 'lib/application_helper'
 
 NAMESPACE={'marc' => "http://www.loc.gov/MARC21/slim"}
 ZR_ADDITION=true
@@ -36,8 +37,10 @@ transform=YAML.load_file(opts[:rules])
 start = 0
 ofile=File.open(opts[:outfile], "w")
 print transform
+total = ApplicationHelper.total(source_file)
 
-bar = ProgressBar.create(title: "Found", :format => "%c of %C Records checked. -- %a | %B | %p%% %e", total: 1050000, remainder_mark: '-', progress_mark: '#')
+
+bar = ProgressBar.create(title: "Found", :format => "%c of %C Records checked. -- %a | %B | %p%% %e", total: total, remainder_mark: '-', progress_mark: '#')
 
 if File.exists?(source_file)
   connection = OracleDB.new.connection if !connection
@@ -56,9 +59,8 @@ if File.exists?(source_file)
         tr.zr_addition_split_730
         tr.zr_addition_change_243
         tr.zr_addition_change_593_abbreviation
-        tr.delete_anonymus
+        #tr.delete_anonymus
         tr.zr_addition_change_scoring
-        #tr.zr_addition_remove_empty_linked_fields
         tr.zr_addition_transfer_url
         tr.remove_unlinked_authorities
       end

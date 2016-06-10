@@ -262,22 +262,28 @@ class Transformator
     subfields=node.xpath("//marc:datafield[@tag='500']/marc:subfield[@code='a']", NAMESPACE)
     subfields.each do |sf|
       if sf.content.ends_with_url?
-        #puts sf.content
-        urlbem = sf.content.split(": ")[0]
-        url = sf.content.split(": ")[1]
-        tag_856 = Nokogiri::XML::Node.new "datafield", node
-        tag_856['tag'] = '856'
-        tag_856['ind1'] = '0'
-        tag_856['ind2'] = ' '
-        sfa = Nokogiri::XML::Node.new "subfield", node
-        sfa['code'] = 'u'
-        sfa.content = url
-        sf2 = Nokogiri::XML::Node.new "subfield", node
-        sf2['code'] = 'z'
-        sf2.content = urlbem
-        tag_856 << sfa << sf2
-        node.root << tag_856
-        sf.parent.remove
+        if sf.content =~ /dl.rism.info/
+          rism_id = node.xpath("//marc:controlfield[@tag='001']", NAMESPACE).first.content
+          logger.debug("DROPPED MULTIMEDIA LINK in #{rism_id}: #{sf.parent.to_s}")
+          sf.parent.remove
+        else
+          #puts sf.content
+          urlbem = sf.content.split(": ")[0]
+          url = sf.content.split(": ")[1]
+          tag_856 = Nokogiri::XML::Node.new "datafield", node
+          tag_856['tag'] = '856'
+          tag_856['ind1'] = '0'
+          tag_856['ind2'] = ' '
+          sfa = Nokogiri::XML::Node.new "subfield", node
+          sfa['code'] = 'u'
+          sfa.content = url
+          sf2 = Nokogiri::XML::Node.new "subfield", node
+          sf2['code'] = 'z'
+          sf2.content = urlbem
+          tag_856 << sfa << sf2
+          node.root << tag_856
+          sf.parent.remove
+        end
       end
     end
   end
@@ -402,8 +408,8 @@ class Transformator
     scoring = node.xpath("//marc:datafield[@tag='670']/marc:subfield[@code='a']", NAMESPACE)
     return 0 if scoring.empty?
     scoring.each do |tag|
-      entry = tag.content.split(": ")[0]
-      fd = tag.content.split(": ")[1]
+      entry = tag.content.split(":")[0]
+      fd = tag.content.include?(":") ? (tag.content.split(":")[1..-1]).join.strip : ""
       if lit_ids.include?(entry)
         a0001=lit_ids[entry]
       else
@@ -426,6 +432,7 @@ class Transformator
       sfb.content = fd
       tag.add_next_sibling(sfb)
       tag.content = entry
+      binding.pry
     end
   end
 
