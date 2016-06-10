@@ -1,0 +1,63 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'yaml'
+require 'nokogiri'
+require 'trollop'
+require 'ruby-progressbar'
+require 'rbconfig'
+require 'zip'
+require 'pry'
+require_relative 'lib/report'
+require_relative 'lib/xmlstream'
+require_relative 'lib/marc_string'
+require_relative 'lib/application_helper'
+
+NAMESPACE={'marc' => "http://www.loc.gov/MARC21/slim"}
+ZR_ADDITION=true
+
+#OPTIONS
+opts = Trollop::options do
+  version "RISM changer 1.0"
+  banner <<-EOS
+This utility program creates reports.
+
+Usage:
+   marcxml-report [options]
+where [options] are:
+  EOS
+  opt :rules, "YAML-file with transforming rules", :type => :string, :default => "conf/transform.yaml"
+  opt :infile, "Input-Filename", :type => :string
+  opt :outfile, "Output-Filename", :type => :string, :default => "out.csv"
+end
+
+Trollop::die :infile, "must exist" if !opts[:infile]
+source_file=opts[:infile]
+start = 0
+ofile=File.open(opts[:outfile], "w")
+total = ApplicationHelper.total(source_file)
+
+bar = ProgressBar.create(title: "Found", :format => "%c of %C Records checked. -- %a | %B | %p%% %e", total: total, remainder_mark: '-', progress_mark: '#')
+
+def each_record(filename, &block)
+  File.open(filename) do |file|
+    Nokogiri::XML::Reader.from_io(file).each do |node|
+      if node.name == 'record' and node.node_type == Nokogiri::XML::Reader::TYPE_ELEMENT
+        yield(Nokogiri::XML(node.outer_xml, nil, "UTF-8"))
+      end
+    end
+  end
+end
+
+if File.exists?(source_file)
+  result = Result.new
+  each_record(source_file) do |record|
+    report = Report.new(record, result)
+    report.generate_from_tag("852$a")
+    bar.increment
+  end
+  result.to_s
+  result.to_csv(ofile)
+  puts "\nCompleted: "+Time.new.strftime("%Y-%m-%d %H:%M:%S")
+else
+  puts source_file + " is not a file!"
+end
