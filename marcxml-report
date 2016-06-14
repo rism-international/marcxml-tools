@@ -57,6 +57,7 @@ if File.exists?(source_file)
   end
   puts result.to_s
   result.to_csv(ofile)
+  result.to_xls :index => 0, :reverse => false, :ofile => ofile
   puts "\nCompleted: "+Time.new.strftime("%Y-%m-%d %H:%M:%S")
 else
   puts source_file + " is not a file!"
