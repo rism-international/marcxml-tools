@@ -25,3 +25,6 @@ input/
 export/
 result.csv
 result.xls
+bnf.xml
+bnf_out.xml
+out.txt
