@@ -8,11 +8,6 @@ require 'rbconfig'
 require 'zip'
 require 'pry'
 Dir[File.dirname(__FILE__) + '/lib/*.rb'].each {|file| require file }
-#require_relative 'lib/transformator'
-#require_relative 'lib/xmlstream'
-#require_relative 'lib/marc_string'
-#require_relative 'lib/oracle_db'
-#require_relative 'lib/application_helper'
 
 NAMESPACE={'marc' => "http://www.loc.gov/MARC21/slim"}
 ZR_ADDITION=true
@@ -35,6 +30,7 @@ end
 Trollop::die :infile, "must exist" if !opts[:infile]
 source_file=opts[:infile]
 transform=YAML.load_file(opts[:rules])
+transform_class = transform['Class'] ? Object.const_get(transform['Class']) : Transformator
 start = 0
 ofile=File.open(opts[:outfile], "w")
 print transform
@@ -44,75 +40,17 @@ total = ApplicationHelper.total(source_file)
 bar = ProgressBar.create(title: "Found", :format => "%c of %C Records transformed. -- %a | %B | %p%% %e", total: total, remainder_mark: '-', progress_mark: '#')
 
 if File.exists?(source_file)
-  connection = OracleDB.new.connection if !connection
+  #connection = OracleDB.new.connection if !connection
   xmlstream = Xmlstream.new(ofile)
   xmlstream.each_record(source_file) do |record|
+    tr = transform_class.new(record)
     delete_flag=false
-
-    if opts[:rules] =~ /bnf/
-      tr = TransformBNF.new(record)
-    else
-      tr = Transformator.new(record)
-    end 
-
-    tr.change_material
-    tr.change_collection
-    tr.zr_addition_add_isil
     if ZR_ADDITION
-      if opts[:rules] =~ /source/
-        tr.change_leader
-        tr.zr_addition_change_attribution
-        tr.zr_addition_prefix_performance
-        tr.zr_addition_split_730
-        tr.zr_addition_change_243
-        tr.zr_addition_change_593_abbreviation
-        #tr.delete_anonymus
-        tr.zr_addition_change_scoring
-        tr.zr_addition_transfer_url
-        tr.remove_unlinked_authorities
-      end
-
-      if opts[:rules] =~ /bnf/
-        tr.change_leader
-        tr.zr_addition_change_attribution
-        tr.zr_addition_prefix_performance
-        tr.zr_addition_split_730
-        tr.zr_addition_change_243
-        tr.zr_addition_change_593_abbreviation
-        #tr.delete_anonymus
-        tr.zr_addition_change_scoring
-        tr.zr_addition_transfer_url
-        tr.change_009
-        tr.insert_773_ref
-        tr.remove_852_duplicate
-        #tr.remove_unlinked_authorities
-      end
-
-
-      if opts[:rules] =~ /person/
-        tr.change_leader
-        tr.zr_addition_change_gender
-        tr.zr_addition_change_individualize
-        tr.zr_addition_change_035
-        tr.zr_addition_person_add_profession
-        tr.zr_addition_person_split_510(connection)
-        tr.zr_addition_person_add_670_id(connection)
-        tr.zr_addition_change_cataloging_source 
-      end
-      if opts[:rules] =~ /catalogue/
-        tr.change_leader
-        tr.zr_addition_catalogue_change_media
-        tr.remove_datafield("508")
-      end
-      if opts[:rules] =~ /institution/
-        tr.change_leader
-        tr.zr_addition_change_cataloging_source 
-      end
-
+      tr.execute_all
     end
 
-    if transform
-      transform.each do |entry| 
+    if transform['Mapping']
+      transform['Mapping'].each do |entry| 
         entry.each do |k,v|
           # Delete if node not exits
           if !v
@@ -144,7 +82,7 @@ if File.exists?(source_file)
       end
     end
 
-    tr.zr_addition_move_852c if opts[:rules] =~ /source/
+    tr.move_852c if opts[:rules] =~ /source/
     
     #Sorting tags
     unless delete_flag

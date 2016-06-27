@@ -1,3 +1,5 @@
+Class: MuscatInstitution
+Mapping:
 - "622": "371"
 - "569": "551"
 - "371$e": "a"

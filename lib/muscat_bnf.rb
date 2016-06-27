@@ -3,21 +3,24 @@ require 'rubygems'
 require 'nokogiri'
 require 'rbconfig'
 #ir[File.dirname(__FILE__) + '*.rb'].each {|file| require file }
-require_relative 'transformator'
+require_relative 'muscat_source'
 
-class TransformBNF < Transformator
+class BNF < MuscatSource
   NAMESPACE={'marc' => "http://www.loc.gov/MARC21/slim"}
   include Logging
   @refs = {}
   class << self
     attr_accessor :refs
   end
-  attr_accessor :node, :namespace, :connection
+  attr_accessor :node, :namespace, :methods
   def initialize(node, namespace={'marc' => "http://www.loc.gov/MARC21/slim"})
     @namespace = namespace
     @node = node
+    @methods = [:change_leader, :change_collection, :add_isil, :change_attribution, :prefix_performance,
+                :split_730, :change_243, :change_593_abbreviation, :change_scoring, :transfer_url,
+                :change_009, :insert_773_ref, :remove_852_duplicate]
   end
-  
+
   def change_009
     cfield = node.xpath("//marc:controlfield[@tag='009']", NAMESPACE).empty? ? nil : node.xpath("//marc:controlfield[@tag='009']", NAMESPACE)
     return 0 unless cfield
@@ -52,14 +55,14 @@ class TransformBNF < Transformator
 
 
   def insert_773_ref
-    if TransformBNF.refs.empty?
-      TransformBNF.correspondance
+    if BNF.refs.empty?
+      BNF.correspondance
     end
     
     subfields=node.xpath("//marc:datafield[@tag='773']/marc:subfield[@code='a']", NAMESPACE)
     return 0 if subfields.empty?
     local_ref = subfields.first.content
-    rism_ref = TransformBNF.refs[local_ref]
+    rism_ref = BNF.refs[local_ref]
     sfw = Nokogiri::XML::Node.new "subfield", node
     sfw['code'] = 'w'
     sfw.content = rism_ref
@@ -137,16 +140,16 @@ class TransformBNF < Transformator
     require 'yaml'
     file_name = "/tmp/bnf"
     if File.exists?(file_name)
-      TransformBNF.refs = YAML.load(File.read(file_name))
+      BNF.refs = YAML.load(File.read(file_name))
     else
       each_record(ifile) do |node|
         cfield = node.xpath("//marc:controlfield[@tag='009']", NAMESPACE).empty? ? nil : node.xpath("//marc:controlfield[@tag='009']", NAMESPACE)
         return 0 unless cfield
         local_id = cfield.first.content
         rism_id = node.xpath("//marc:controlfield[@tag='001']", NAMESPACE).first.content
-        TransformBNF.refs[local_id] = rism_id
+        BNF.refs[local_id] = rism_id
       end
-      File.open(file_name, 'w') {|f| f.write(YAML.dump(TransformBNF.refs)) }
+      File.open(file_name, 'w') {|f| f.write(YAML.dump(BNF.refs)) }
     end
   end
 
