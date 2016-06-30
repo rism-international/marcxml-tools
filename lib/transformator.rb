@@ -4,6 +4,7 @@ require 'nokogiri'
 require 'rbconfig'
 require_relative 'logging'
 
+# Parent class for modifying Marcxml
 class Transformator
   include Logging
   @mapping = {}
@@ -18,7 +19,7 @@ class Transformator
     @methods = []
   end
 
-
+  
   def rename_subfield_code(tag, old_code, new_code)
     subfield=node.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{old_code}']", NAMESPACE)
     if !subfield.empty? && !node.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{new_code}']", NAMESPACE).empty?

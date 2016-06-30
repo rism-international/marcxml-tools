@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 require 'nokogiri'
 
+# Basic class for reading huge marcxml files
 class Xmlstream
   attr_accessor :ofile
 
@@ -21,8 +22,10 @@ class Xmlstream
 
   alias :read :each_record
 
+  # Method for sorting and appending nodes
+  # lt and gt arr replaced, but HTML-entities should be erased completly 
+  # 
   def append(record, nodes)
-
     nodes.sort_by{|node| [node.attr("tag"), nodes.index(node)]}.each{|node| 
       record.root.add_child(node)}
     record_string = record.to_s.gsub("&lt;", "[").gsub("&gt;", "]")

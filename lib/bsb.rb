@@ -5,6 +5,7 @@ require 'rbconfig'
 require_relative 'logging'
 require_relative 'transformator'
 
+# Class for mofifyiung of RISM OPAC at BSB
 class BSB < Transformator
   include Logging
   attr_accessor :node, :namespace, :methods
@@ -14,6 +15,7 @@ class BSB < Transformator
     @methods =  [:add_material_to_copyist]
   end
 
+  # This method add a material linkage to copyists in the first material
   def add_material_to_copyist(filtering=true)
     modified = false
     datafields = node.xpath("//marc:datafield[@tag='700']", NAMESPACE)

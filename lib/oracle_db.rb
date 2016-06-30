@@ -3,6 +3,7 @@ require 'oci8'
 require 'nokogiri'
 require 'pry'
 
+# Connector for OracleDB; credentials have to be in the enviroment
 class OracleDB
   attr_accessor :connection
   def initialize
