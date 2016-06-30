@@ -10,23 +10,23 @@ DATE=`date +%Y%m%d`
 echo "Sources"
 ##mv export.xml rism_sources.xml
 ##sed -i '/<collection>/c\<collection xmlns="http://www.loc.gov/MARC21/slim">' input/rism_sources.xml
-#ruby marcxml-transform -i input/rism_sources.xml -r conf/transform_sources_muscat.yaml -o export/muscat/sources.xml
-#ruby marcxml-analyze -i export/muscat/sources.xml -o export/muscat/sources_analyze.txt -c
+ruby marcxml-transform -i input/rism_sources.xml -c conf/transform_sources_muscat.yaml -o export/muscat/sources.xml
+ruby marcxml-analyze -i export/muscat/sources.xml -o export/muscat/sources_analyze.txt -c
 
 echo "People"
-#ruby marcxml-transform -i input/rism_pe.xml -r conf/transform_person.yaml -o export/muscat/people.xml
-#ruby marcxml-analyze -i export/muscat/people.xml -o export/muscat/people_analyze.txt -c
+ruby marcxml-transform -i input/rism_pe.xml -c conf/transform_person.yaml -o export/muscat/people.xml
+ruby marcxml-analyze -i export/muscat/people.xml -o export/muscat/people_analyze.txt -c
 
 echo "Catalogue"
-#ruby marcxml-transform -i input/rism_lit.xml -r conf/transform_catalogue.yaml -o export/muscat/catalogue.xml
-#ruby marcxml-analyze -i export/muscat/catalogue.xml -o export/muscat/catalogue_analyze.txt -c
+ruby marcxml-transform -i input/rism_lit.xml -c conf/transform_catalogue.yaml -o export/muscat/catalogue.xml
+ruby marcxml-analyze -i export/muscat/catalogue.xml -o export/muscat/catalogue_analyze.txt -c
 
 echo "Institutions"
-#ruby marcxml-transform -i input/rism_ks.xml -r conf/transform_institutions.yaml -o export/muscat/institutions.xml
-#ruby marcxml-analyze -i export/muscat/institutions.xml -o export/muscat/institutions_analyze.txt -c
+ruby marcxml-transform -i input/rism_ks.xml -c conf/transform_institutions.yaml -o export/muscat/institutions.xml
+ruby marcxml-analyze -i export/muscat/institutions.xml -o export/muscat/institutions_analyze.txt -c
 
 echo "Digital Objects"
-#mv input/rism_mm.xml export/muscat/digital_objects.xml
+cp input/rism_mm.xml export/muscat/digital_objects.xml
 
 echo "Create Archive"
 tar -czf export/muscat/muscat3data_$DATE.tar.gz export/muscat/*.xml export/muscat/*.txt

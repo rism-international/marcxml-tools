@@ -6,6 +6,11 @@ require_relative 'logging'
 
 class Transformator
   include Logging
+  @mapping = {}
+  class << self
+    attr_accessor :mapping
+  end
+
   attr_accessor :node, :namespace, :methods
   def initialize(node, namespace={'marc' => "http://www.loc.gov/MARC21/slim"})
     @namespace = namespace

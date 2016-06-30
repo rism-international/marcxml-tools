@@ -22,18 +22,19 @@ Usage:
    marcxml-transform [options]
 where [options] are:
   EOS
-  opt :rules, "YAML-file with transforming rules", :type => :string, :default => "conf/transform.yaml"
+  opt :configuration, "YAML-file with transforming rules", :type => :string, :default => "conf/transform.yaml"
   opt :infile, "Input-Filename", :type => :string
   opt :outfile, "Output-Filename", :type => :string, :default => "out.xml"
 end
 
 Trollop::die :infile, "must exist" if !opts[:infile]
 source_file=opts[:infile]
-transform=YAML.load_file(opts[:rules])
+transform=YAML.load_file(opts[:configuration])
 transform_class = transform['Class'] ? Object.const_get(transform['Class']) : Transformator
+transform_class.mapping = transform['Mapping']
 start = 0
 ofile=File.open(opts[:outfile], "w")
-print transform
+#print transform
 total = ApplicationHelper.total(source_file)
 
 
@@ -44,27 +45,31 @@ if File.exists?(source_file)
   xmlstream = Xmlstream.new(ofile)
   xmlstream.each_record(source_file) do |record|
     tr = transform_class.new(record)
-    delete_flag=false
+    #delete_flag=false
     if ZR_ADDITION
       tr.execute_all
     end
 
-    if transform['Mapping']
-      transform['Mapping'].each do |entry| 
+    if transform_class.mapping && !transform_class.mapping.empty?
+      #transform['Mapping'].each do |entry| 
+      transform_class.mapping.each do |entry| 
         entry.each do |k,v|
           # Delete if node not exits
-          if !v
-            tag=k.split("$")[0]
-            code=k.split("$")[1]
-            node=record.xpath("//marc:datafield[@tag='#{tag}']", NAMESPACE)
-            subfield_node=record.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{code}']", NAMESPACE)
-            if node.empty? || subfield_node.empty? || subfield_node.text.strip.empty?
-              puts record
-              delete_flag=true            
-            end
-            next if delete_flag
-          elsif v=="-"
+          #if !v
+          #  binding.pry
+          #  tag=k.split("$")[0]
+          #  code=k.split("$")[1]
+          #  node=record.xpath("//marc:datafield[@tag='#{tag}']", NAMESPACE)
+          #  subfield_node=record.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{code}']", NAMESPACE)
+          #  if node.empty? || subfield_node.empty? || subfield_node.text.strip.empty?
+          #    puts record
+          #    delete_flag=true            
+          #  end
+          #  next if delete_flag
+          if !v && k.is_tag_with_subfield?
             tr.remove_subfield(k)
+          elsif !v && k.is_tag?
+            tr.remove_tag(k)
           # Rename datafield
           elsif k.is_tag? && v.is_tag?
             tr.rename_datafield(k, v)
@@ -82,10 +87,10 @@ if File.exists?(source_file)
       end
     end
 
-    tr.move_852c if opts[:rules] =~ /source/
+    tr.move_852c if opts[:configuration] =~ /source/
     
     #Sorting tags
-    unless delete_flag
+    if tr.namespace
       nodes = record.xpath("//marc:datafield", NAMESPACE).remove
       xmlstream.append(record, nodes)
     end

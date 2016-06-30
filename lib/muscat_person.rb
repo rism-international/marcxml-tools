@@ -19,7 +19,7 @@ class MuscatPerson < Transformator
     @namespace = namespace
     @node = node
     @methods = [:add_isil, :change_gender, :change_individualize, :change_035, :add_profession, 
-     :split_510, :add_670_id, :change_cataloging_source]
+     :split_510, :add_670_id, :change_cataloging_source, :delete_empty_hs]
   end
 
   def add_profession
@@ -170,6 +170,15 @@ class MuscatPerson < Transformator
       end
     end
     node.xpath("//marc:datafield[@tag='035']", NAMESPACE).first.remove unless subfields.empty?
+  end
+
+  def delete_empty_hs
+    tag = node.xpath("//marc:datafield[@tag='100']", NAMESPACE)
+    subfield_node = node.xpath("//marc:datafield[@tag='100']/marc:subfield[@code='a']", NAMESPACE)
+    if tag.empty? || subfield_node.empty? || subfield_node.text.strip.empty?
+      puts self.node
+      self.namespace = nil
+    end
   end
 
   def convert_gender(str)
