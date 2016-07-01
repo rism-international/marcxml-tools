@@ -6,12 +6,12 @@ require_relative 'logging'
 require_relative 'transformator'
 
 class MuscatInstitution < Transformator
-  include Logging
+  include Logging 
   attr_accessor :node, :namespace, :methods
   def initialize(node, namespace={'marc' => "http://www.loc.gov/MARC21/slim"})
     @namespace = namespace
     @node = node
-    @methods = [:add_isil, :change_cataloging_source]
+    @methods = [:add_isil, :change_cataloging_source, :map]
   end
 
   def change_cataloging_source 

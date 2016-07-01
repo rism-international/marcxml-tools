@@ -86,7 +86,7 @@ if File.exists?(source_file)
         end
       end
     end
-
+    #IMPORTANT
     tr.move_852c if opts[:configuration] =~ /source/
     
     #Sorting tags

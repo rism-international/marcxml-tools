@@ -7,11 +7,20 @@ require 'pry'
 class OracleDB
   attr_accessor :connection
   def initialize
-    OCI8::BindType::Mapping[:number] = OCI8::BindType::Integer
-    ENV["NLS_LANG=AMERICAN_AMERICA.WE8ISO8859P9"]
+    begin
+      OCI8::BindType::Mapping[:number] = OCI8::BindType::Integer
+      ENV["NLS_LANG=AMERICAN_AMERICA.WE8ISO8859P9"]
+    rescue
+      puts "Oracle Access is not configured through enviroment!"
+    end
   end
   def connection
-    OCI8.new(ENV['ORACLE_USER'], ENV['ORACLE_PASSWORD'], ENV['ORACLE_HOST'])
+    begin
+      OCI8.new(ENV['ORACLE_USER'], ENV['ORACLE_PASSWORD'], ENV['ORACLE_HOST'])
+    rescue
+      puts "Oracle Access is not configured through enviroment!"
+      return -1
+    end
   end
 end
 

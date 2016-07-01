@@ -13,10 +13,10 @@ class Transformator
   end
 
   attr_accessor :node, :namespace, :methods
-  def initialize(node, namespace={'marc' => "http://www.loc.gov/MARC21/slim"})
+  def initialize(node, config, namespace={'marc' => "http://www.loc.gov/MARC21/slim"})
     @namespace = namespace
     @node = node
-    @methods = []
+    @methods = [:map]
   end
 
   
@@ -116,6 +116,33 @@ class Transformator
       end
     end
   end
+
+  def map
+    return 0 if !Transformator.mapping
+    Transformator.mapping.each do |entry| 
+       entry.each do |k,v|
+        if !v && k.is_tag_with_subfield?
+          remove_subfield(k)
+        elsif !v && k.is_tag?
+          remove_tag(k)
+        # Rename datafield
+        elsif k.is_tag? && v.is_tag?
+          rename_datafield(k, v)
+        # Rename subfield
+        elsif k.is_tag_with_subfield? && v.is_subfield?
+          tag=k.split("$")[0]
+          old_sf=k.split("$")[1]
+          new_sf=v
+          rename_subfield_code(tag, old_sf, new_sf)
+         # Move subfield
+        elsif k.is_tag_with_subfield? && v.is_tag?
+           move_subfield_to_tag(k, v)
+        end
+      end
+    end
+  end
+
+
 
 end
 

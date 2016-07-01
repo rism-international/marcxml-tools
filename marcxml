@@ -1,0 +1,118 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'yaml'
+require 'nokogiri'
+require 'trollop'
+require 'ruby-progressbar'
+require 'rbconfig'
+require 'zip'
+require 'pry'
+Dir[File.dirname(__FILE__) + '/lib/*.rb'].each {|file| require file }
+
+NAMESPACE={'marc' => "http://www.loc.gov/MARC21/slim"}
+ZR_ADDITION=true
+
+#OPTIONS
+opts = Trollop::options do
+  version "RISM Marcxml changer 1.0"
+  banner <<-EOS
+This utility program changes MARCXML nodes according to an YAML file.
+
+Usage:
+   marcxml [options]
+where [options] are:
+  EOS
+  opt :config, "YAML-file with transforming rules", :type => :string, :default => "conf/transform.yaml", :short => "-c"
+  opt :infile, "Input-Filename", :type => :string, :short => "-i"
+  opt :outfile, "Output-Filename", :type => :string, :default => "out.xml", :short => '-o'
+  opt :transform, "Transform Marcxml", :short => '-t'
+  opt :analyze, "Analyze Marcxml", :short => '-a'
+  opt :filter, "Filter Marcxml", :short => '-f'
+  opt :merge, "Merge Marcxml", :short => '-m'
+  opt :report, "Generate Report", :short => '-r'
+  opt :split, "Split Marcxml", :short => '-s'
+  opt :validate, "Validate Marcxml", :short => '-d'
+  opt "with-content", "with sample content (only with analyze)"
+  opt "with-linked", "with linked entries (only with filter)"
+  opt :xor, "With or logic (only with filter)"
+  opt :zip, "Create output as zip"
+  opt :limit, "Limit size of output", :short => '-l'
+end
+
+Trollop::die :infile, "must exist" if !opts[:infile]
+source_file=opts[:infile]
+ofile=File.open(opts[:outfile], "w")
+total = ApplicationHelper.total(source_file)
+bar = ProgressBar.create(title: "Found", :format => "%c of %C Records transformed. -- %a | %B | %p%% %e", total: total, remainder_mark: '-', progress_mark: '#')
+
+if File.exists?(source_file)
+
+  #Setting global variables
+  if opts[:transform]
+    transform=YAML.load_file(opts[:config])
+    transform_class = transform['Class'] ? Object.const_get(transform['Class']) : Transformator
+    Transformator.mapping = transform['Mapping']
+  elsif opts[:analyze]
+    resdict=Hash.new(0)
+    content_dict={}
+  end
+
+  #Start reading stream
+  xmlstream = Xmlstream.new(ofile)
+  xmlstream.each_record(source_file) do |record|
+
+    if opts[:transform]
+      tr = transform_class.new(record)
+      if ZR_ADDITION
+        tr.execute_all
+      end
+      if tr.namespace
+        nodes = record.xpath("//marc:datafield", NAMESPACE).remove
+        xmlstream.append(record, nodes)
+      end
+    
+    elsif opts[:analyze]
+      record.xpath('//marc:controlfield', NAMESPACE).each do |node|
+        resdict[node["tag"]]+=1
+        if opts["with-content"] && !content_dict.has_key?(node["tag"])
+          content_dict[node["tag"]]=node.content
+        end
+      end
+      record.xpath('//marc:datafield', NAMESPACE).each do |node|
+        if node.children
+          node.children.each do |sf|
+            if sf["code"]
+              resdict["#{node["tag"]}$#{sf["code"]}"]+=1
+              if opts["with-content"] && !content_dict.has_key?("#{node["tag"]}$#{sf["code"]}")
+                content_dict["#{node["tag"]}$#{sf["code"]}"]=sf.content
+              end
+            end
+          end
+        end
+      end
+    end
+    bar.increment
+  end
+
+  #Writing to outfile
+  ##TODO making writer generic
+  if opts[:analyze]
+    if opts["with-content"]
+      resdict.each do |k,v|
+      resdict[k]=v.to_s + " (#{content_dict[k]})"
+      end
+    end
+    if ofile
+      ofile.write(Hash[*(resdict.sort_by{|k,v| k}).flatten].to_yaml)
+      ofile.close
+    else
+      puts Hash[*(resdict.sort_by{|k,v| k}).flatten].to_yaml
+    end
+    puts "\nCompleted!"
+  else
+    xmlstream.close
+    puts "\nCompleted: "+Time.new.strftime("%Y-%m-%d %H:%M:%S")
+  end
+else
+  puts source_file + " is not a file!"
+end

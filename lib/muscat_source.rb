@@ -12,7 +12,7 @@ class MuscatSource < Transformator
     @namespace = namespace
     @node = node
     @methods =  [:change_leader, :change_material, :change_collection, :add_isil, :change_attribution, :prefix_performance, 
-     :split_730, :change_243, :change_593_abbreviation, :change_scoring, :transfer_url, :remove_unlinked_authorities]
+     :split_730, :change_243, :change_593_abbreviation, :change_scoring, :transfer_url, :remove_unlinked_authorities, :map]
   end
 
   def check_material
@@ -263,6 +263,7 @@ class MuscatSource < Transformator
       end
     end
   end
+
 
   def convert_attribution(str)
     case str
