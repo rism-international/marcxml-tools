@@ -36,6 +36,13 @@ class Xmlstream
     #puts start
   end
 
+  def write(record)
+    doc = Nokogiri::XML.parse(record.to_s) do |config|
+      config.noblanks
+    end
+    ofile.write(doc.remove_namespaces!.root.to_xml :encoding => 'UTF-8')
+  end
+
   def close
     ofile.write("\n</collection>")
     ofile.close
