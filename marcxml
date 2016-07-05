@@ -23,7 +23,7 @@ Usage:
 where [options] are:
   EOS
   opt :config, "YAML-file with transforming rules", :type => :string, :default => "conf/transform.yaml", :short => "-c"
-  opt :infile, "Input-Filename", :type => :string, :short => "-i"
+  opt :infile, "Input-Filename", :type => :strings, :short => "-i"
   opt :outfile, "Output-Filename", :type => :string, :default => "out.xml", :short => '-o'
   opt :transform, "Transform Marcxml", :short => '-t'
   opt :analyze, "Analyze Marcxml", :short => '-a'
@@ -36,21 +36,33 @@ where [options] are:
   opt "with-linked", "with linked entries (only with filter)", :type => :string
   opt :xor, "With or logic (only with filter)"
   opt :zip, "Create output as zip"
-  opt :limit, "Limit size of output", :short => '-l', :type => :integer
+  opt :limit, "Limit size of output", :short => '-l', :type => :integer, :default => 50000
+
 end
 
 Trollop::die :infile, "must exist" if !opts[:infile]
-source_file=opts[:infile]
+
+if opts[:infile].size == 1
+  source_file = opts[:infile].first
+else
+  source_files = opts[:infile]
+end
+
 ofile=File.open(opts[:outfile], "w")
-total = ApplicationHelper.total(source_file)
+if source_file
+  total = ApplicationHelper.total(source_file)
+else
+  total = 10000
+end
+
 if opts['with-linked']
   total = total * 2
 end
-bar = ProgressBar.create(title: "Found", :format => "%c of %C Records transformed. -- %a | %B | %p%% %e", total: total, remainder_mark: '-', progress_mark: '#')
 
-if File.exists?(source_file)
+bar = ProgressBar.create(title: "Found", :format => "%c of %C Records transformed. -- %a | %B | %p%% %e", total: total, remainder_mark: '-', progress_mark: '#') unless opts[:merge]
 
-  #Setting global variables
+if (source_file && File.exists?(source_file)) || source_files
+  #Setting runtime variables
   if opts[:transform]
     transform=YAML.load_file(opts[:config])
     transform_class = transform['Class'] ? Object.const_get(transform['Class']) : Transformator
@@ -63,11 +75,23 @@ if File.exists?(source_file)
     filter_class.config = YAML.load_file(opts[:config])
     filter_class.connected = opts['with-linked']
     filter_class.xor = opts[:xor]
-    binding.pry
   elsif opts[:split]
     start = 0
     ofile=File.open("#{"%06d" % start}.xml", "w")
-    #ofile.write('<?xml version="1.0" encoding="UTF-8"?>'+"\n"+'<collection xmlns="http://www.loc.gov/MARC21/slim">'+"\n")
+
+  elsif opts[:merge]
+    xmlstream = Xmlstream.new(ofile)
+    source_files.each do |sfile|
+      puts sfile
+      if File.exists?(sfile)
+        xmlstream.each_record(sfile) { |record|
+          xmlstream.write(record)
+        }
+      end
+    end
+    xmlstream.close
+    puts "Finished."
+    exit
   end
 
 
