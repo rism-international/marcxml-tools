@@ -15,8 +15,9 @@ module Marcxml
     @result_records = []
     @xor = false
     @connected = false
+    @start = 0
     class << self
-      attr_accessor :connected_records, :result_records, :config, :xor, :connected
+      attr_accessor :connected_records, :result_records, :config, :xor, :connected, :size, :start
     end
 
 
@@ -77,6 +78,7 @@ module Marcxml
       end
       return false
     end
+
       #if opts[:debug]
       #  d=File.open("recs", "w") do |f|
       #  f.write result_records.to_yaml

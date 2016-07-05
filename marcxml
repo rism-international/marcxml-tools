@@ -36,7 +36,7 @@ where [options] are:
   opt "with-linked", "with linked entries (only with filter)", :type => :string
   opt :xor, "With or logic (only with filter)"
   opt :zip, "Create output as zip"
-  opt :limit, "Limit size of output", :short => '-l'
+  opt :limit, "Limit size of output", :short => '-l', :type => :integer
 end
 
 Trollop::die :infile, "must exist" if !opts[:infile]
@@ -64,10 +64,11 @@ if File.exists?(source_file)
     filter_class.connected = opts['with-linked']
     filter_class.xor = opts[:xor]
     binding.pry
+  elsif opts[:split]
+    start = 0
+    ofile=File.open("#{"%06d" % start}.xml", "w")
+    #ofile.write('<?xml version="1.0" encoding="UTF-8"?>'+"\n"+'<collection xmlns="http://www.loc.gov/MARC21/slim">'+"\n")
   end
-
-
-
 
 
   #Start reading stream
@@ -86,6 +87,20 @@ if File.exists?(source_file)
     elsif opts[:filter]
       filter = filter_class.new(record)
       xmlstream.write(record) if filter.match?  
+
+    elsif opts[:split]
+      doc = Nokogiri::XML.parse(record.to_s) do |config|
+        config.noblanks
+      end
+      ofile.write(doc.remove_namespaces!.root.to_xml :encoding => 'UTF-8')
+      start+=1
+      if start % opts[:limit] == 0
+        ofile.write("</collection>")
+        ofile.close
+        ofile=File.open("#{"%06d" % start}.xml", "w")
+        ofile.write('<?xml version="1.0" encoding="UTF-8"?>'+"\n"+'<collection xmlns="http://www.loc.gov/MARC21/slim">'+"\n")
+      end
+    #break if start==100
 
     elsif opts[:analyze]
       record.xpath('//marc:controlfield', NAMESPACE).each do |node|
@@ -120,8 +135,7 @@ if File.exists?(source_file)
       bar.increment
     end
   end
-
-
+  
 
   #Writing to outfile
   ##TODO making writer generic
@@ -138,6 +152,10 @@ if File.exists?(source_file)
       puts Hash[*(resdict.sort_by{|k,v| k}).flatten].to_yaml
     end
     puts "\nCompleted!"
+  elsif opts[:split]
+    ofile.write("\n</collection>")
+    ofile.close
+    puts "\nCompleted: "+Time.new.strftime("%Y-%m-%d %H:%M:%S")
   else
     xmlstream.close
     puts "\nCompleted: "+Time.new.strftime("%Y-%m-%d %H:%M:%S")
