@@ -15,9 +15,8 @@ module Marcxml
     @result_records = []
     @xor = false
     @connected = false
-    @start = 0
     class << self
-      attr_accessor :connected_records, :result_records, :config, :xor, :connected, :size, :start
+      attr_accessor :connected_records, :result_records, :config, :xor, :connected
     end
 
 
@@ -78,30 +77,6 @@ module Marcxml
       end
       return false
     end
-
-      #if opts[:debug]
-      #  d=File.open("recs", "w") do |f|
-      #  f.write result_records.to_yaml
-      #  f.write connected_records.to_yaml
-      #end
-#end
-#matched_individuals=0
-#individuals=[]
-
-#    if opts[:connected]
-#      individuals=(connected_records - result_records).uniq
-#        each_record(source_file) do |record|
-#          id=record.xpath('//marc:controlfield[@tag="001"]', NAMESPACE)[0].content 
-#          if individuals.include?(id)
-#            n=Nokogiri::XML(record.to_s, &:noblanks)
-#            ofile.puts(n.remove_namespaces!.root.to_xml :indent => 4)
-#            matched_individuals+=1
-#          end
-#        end
-#      end
-#    end
-
-
   end
 end
 
