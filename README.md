@@ -2,7 +2,7 @@
 
 RISM Marcxml is a command line utility for managing MARCXML-files.
 
-This prgram has the follwoing options:
+This prgram has the following options:
 
  * --analyze: gives report about tags and occurrances of a MARCXML-file
  * --filter: building a subset of records (e.g. from the complete XML open dataset of sources at http://opac.rism.info). 
@@ -49,7 +49,8 @@ Semantic structure:
 
 ## marcxml --merge
 Merging an array of marcxml-files to one output-file.  
-Required: -i [list of input files].
+Required: -i [list of input files]. 
+Example call: `marcxml --merge -i input1.xml input2.xml -o result.xml`
 
 ## marcxml --report
 Creates report of the inputfile to stdout. Output can be xls- or csv-format too.  
