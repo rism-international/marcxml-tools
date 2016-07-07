@@ -1,17 +1,19 @@
 # RISM MARCXML-Tools
 
-+RISM MARCXML-Tools is a set of command line utilities for managing MARCXML-files.
++RISM Marcxml is a command line utility for managing MARCXML-files.
 
-This set contains
+This prgram has the follwoing options:
 
- * marcxml-analyze: gives report about tags and occurrances of a MARCXML-file
- * marcxml-filter: building a subset of records from the complete XML open dataset of sources at http://opac.rism.info. 
- * marcxml-merge: merging multiple MARCXML-files into one file
- * marcxml-split: splitting large files into chunks
- * marcxml-transform: transforms MARCXML-files
- * marcxml-validate: validates a MARCXML-file
+ * --analyze: gives report about tags and occurrances of a MARCXML-file
+ * --filter: building a subset of records (e.g. from the complete XML open dataset of sources at http://opac.rism.info). 
+ * --help: see help text
+ * --merge: merging multiple MARCXML-files into one file
+ * --report: creates a report
+ * --split: splitting large files into chunks
+ * --transform: transforms MARCXML-files
+ * --validate: validates a MARCXML-file
 
-# marcxml filter
+# marcxml --filter
 
 RISM record filter is a small command line utility for building a subset of records from the 
 complete XML open dataset of sources at http://opac.rism.info. 
@@ -41,7 +43,7 @@ It is possible to look also for dependend records in a collection with the '-c' 
 
 For more options see `marcxml_filter --help`.
 
-# marcxml-transform
+# marcxml --transform
 
 Replaces Marc21 datafield tags and subfield codes according to rules defined by an YAML-file. Structure of the file is:
 

@@ -7,7 +7,6 @@ require_relative 'logging'
 # Parent class for modifying Marcxml
 
 module Marcxml
-
   class Filter
     include Logging
     @connected_records = []
