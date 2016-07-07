@@ -2,8 +2,8 @@
 require 'rubygems'
 require 'nokogiri'
 require 'rbconfig'
-require_relative 'logging'
-require_relative 'transformator'
+require_relative '../logging'
+require_relative '../transformator'
 
 module Marcxml
   class MuscatSource < Transformator

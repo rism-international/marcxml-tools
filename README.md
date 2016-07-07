@@ -13,14 +13,26 @@ This prgram has the follwoing options:
  * --transform: transforms MARCXML-files
  * --validate: validates a MARCXML-file
 
-# marcxml --filter
+## marcxml --analyze
+Creates a report of all fields in the input-file.
+  Optional: --with-content: add sample content at end of line
+Example call: `marcxml -i input.xml -c config.yaml -o output.txt --with-content`
+ 
+Example output: 
 
-RISM record filter is a small command line utility for building a subset of records from the 
-complete XML open dataset of sources at http://opac.rism.info. 
 
-Filtering rules are defined by key-value pairs in an YAML-configuration file (default: query.yaml). 
+## marcxml --filter
+Creating a subset of records from the complete XML open dataset of sources at http://opac.rism.info. 
+  Required: -c [Yaml-config-file]
+  Optional: --with-linked: select also linked parent/child entries
+  Optional: --with-disjunct: select with logical disjunction
+  Example call: `marcxml --filter -i input.xml -c config.yaml --with-disjunct`
 
-__Example__: Query for all new records from Bach in Berlin, State Library in 2015:
+Filtering rules are defined by key-value pairs in an YAML-configuration file (default: conf/query.yaml). 
+It is possible to look also for dependend records in a collection with the '--with-linked' flag.
+Query parameters (one per line) are combined with __"AND"__ logic by default. Take '--with-disjunct' to use the disjunction logic instead.
+
+__Example__: Yaml-config for all new records from Bach in Berlin, State Library in 2015:
 
 ```yaml
 # query.yaml
@@ -31,43 +43,65 @@ __Example__: Query for all new records from Bach in Berlin, State Library in 201
 
 ```
 gives an output-XML-file with a subset of 476 records (as of October 2015). 
-
-
 Semantic structure:
 * Key is the Marc21 field (e.g. "100$a" or "005")
 * Value is a regular expression (e.g. "Mozart.\*"). Hint: regular expression for negative matching (e.g. `^(?!.*term).*$`), see: http://www.regular-expressions.info/lookaround.html. 
 
-Query parameters (one per line) are combined with __"AND"__ logic.
+## marcxml --merge
+Merging an array of marcxml-files to one output-file.
+  Required: -i [list of input files].
 
-It is possible to look also for dependend records in a collection with the '-c' parameter.
+## marcxml --report
+Creates report of the inputfile to stdout. Output can be xls- or csv-format too.
+  Optional: --with-tag: define the marcfield for aggregation.
+  Example call: `marcxml -i input-xml --xls --with-tag='100$a'`
 
-For more options see `marcxml_filter --help`.
+## marcxml --split
+Splitting input-file in chunks. Size is declared with the '--with-limit'-flag. Out are files in sequence 000000+.xml
+  Optional: --with-limit: Specify record size for splitting
+  Example: 'marcxml --split -i input.xml --with-limit=10000'
 
-# marcxml --transform
-
-Replaces Marc21 datafield tags and subfield codes according to rules defined by an YAML-file. Structure of the file is:
+## marcxml --transform
+Replaces Marc21 datafield tags and subfield codes according to rules defined by an YAML-file.
+  Required: -c [Yaml-config-file]
+  Example: `marcxml --transform -i input.xml -c config.yaml -o output.xml`
+ 
+Structure of the Yaml-conf is:
 
 ```yaml
-#transform.yaml
-datafields:
- #- "old_tag": "new_tag" eg.
- - "035": "136"
-subfields:
- #- "tag$old_code": "new_code" eg.
- - "031$r": "g"
-
+#Optional
+Class: MuscatSource
+Mapping:
+  # Moving 772 to 762 
+  - "772": "762"
+  # Dropping 772$a
+  - "772$a": ~
+  # Moving subfield $a to subfield $d
+  - "690$a": "d"
+  # Moving subfield $d to datafield 852
+  - "591$d": "852"
 ```
+You can build much more transform logic with your own classes defined in the lib-folder. Then you have to declare the class-name in the Yaml-conf.
 
-## Installation
+## marcxml --validate
+Validating input-file according to the official standard.
+
+# Installation
+Clone this repository with `git clone https://github.com/rism-t3/marcxml-tools.git` and execute 'bundle install'. 
+Define enviroment variables if you like to use the --muscat-flag (using Oracle-DB).
 
 ###Requirements
-
+* Probably Linux / Ubuntu
 * Ruby
 
 ## Links and tutorials
 * RISM Opendata: https://opac.rism.info/index.php?id=8&L=0
 * MARC21 Documentation: http://www.loc.gov/marc/bibliographic/  
 * Regular Expression: https://en.wikipedia.org/wiki/Regular_expression
+
+
+
+
 
 
 ##How to use MarcXML-Filter

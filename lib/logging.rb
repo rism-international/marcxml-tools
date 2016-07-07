@@ -6,6 +6,6 @@ module Logging
   end
   # Global, memoized, lazy initialized instance of a logger
   def self.logger
-    @logger ||= Logger.new("debug.log")
+    @logger ||= Logger.new("log/debug.log")
   end
 end

@@ -7,10 +7,9 @@ require 'ruby-progressbar'
 require 'rbconfig'
 require 'zip'
 require 'pry'
-Dir[File.dirname(__FILE__) + '/lib/*.rb'].each {|file| require file }
+require 'colorize'
 
 NAMESPACE={'marc' => "http://www.loc.gov/MARC21/slim"}
-ZR_ADDITION=true
 SCHEMA_FILE="MARC21slim.xsd"
 
 #OPTIONS
@@ -70,14 +69,30 @@ where [options] are:
   opt "with-linked", "with linked entries (only with filter)", :type => :string
   opt "with-disjunct", "With or logic (only with filter)"
   opt "with-tag", "Specify marc datafield for reporting", :type => :string
+  opt :muscat, "Import special Muscat libraries", :default => false
   opt "xls", "Format output of report as xls"
   opt "csv", "Format output of report as csv"
   opt :zip, "Create output as zip"
   opt "with-limit", "Limit size of output", :short => '-l', :type => :integer, :default => 50000
 end
+
+Dir[File.dirname(__FILE__) + '/lib/*.rb'].each do |file| 
+  require file 
+end
+
+if opts[:muscat]
+  puts "You are using this program with the `--muscat`-flag; please be sure to have configured ORACLE-connection by enviroment!".yellow
+  Dir[File.dirname(__FILE__) + '/lib/muscat/*.rb'].each do |file| 
+    require file 
+  end
+end
+
 Trollop::die :infile, "must exist" if !opts[:infile]
-Trollop::die :config, "must exist" if opts[:transform]
-Trollop::die :config, "must exist" if opts[:filter]
+if (opts[:transform] || opts[:filter]) && !opts[:config]
+  puts "argument `-c; --config` required."
+  exit
+end
+
 #Trollop::die :outfile, "must exist" if opts[:report]
 if opts[:report] && !opts['with-tag']
   puts "argument `--with-tag` required."
@@ -130,7 +145,7 @@ else
 end
 
 
-bar = ProgressBar.create(title: "Found", :format => "%c of %C Records #{managed}. -- %a | %B | %p%% %e", total: total, remainder_mark: '-', progress_mark: '#') unless opts[:merge]
+bar = ProgressBar.create(title: "Found", :format => "%c of %C Records #{managed}. -- %a | %B | %p%% %e".yellow, total: total, remainder_mark: '-', progress_mark: '#') unless opts[:merge]
 
 if (source_file && File.exists?(source_file)) || source_files
   #Setting runtime variables
@@ -155,14 +170,14 @@ if (source_file && File.exists?(source_file)) || source_files
     xsd = Nokogiri::XML::Schema(File.read(SCHEMA_FILE))
     if !Nokogiri::XML(File.open(source_file) {|f| f.readline}+"<b/>").errors.empty?
       puts Nokogiri::XML(File.open(source_file) {|f| f.readline}+"<b/>").errors
-      puts "#{source_file} is not an XML file!"
+      puts "#{source_file} is not an XML file!".red
       exit
     end
     xsd.validate(source_file).each do |error|
-      puts "#{error.line} :: #{error.message}"
+      puts "#{error.line} :: #{error.message}".red
       exit
     end
-    puts "#{source_file} is a valid MARCXML-file!"
+    puts "#{source_file} is a valid MARCXML-file!".green
     exit
   elsif opts[:merge]
     xmlstream = Xmlstream.new(ofile)
@@ -175,7 +190,7 @@ if (source_file && File.exists?(source_file)) || source_files
       end
     end
     xmlstream.close
-    puts "Finished."
+    puts "Finished.".green
     exit
   end
 
@@ -187,7 +202,7 @@ if (source_file && File.exists?(source_file)) || source_files
 
     if opts[:transform]
       tr = transform_class.new(record)
-      if ZR_ADDITION
+      if opts[:muscat]
         tr.execute_all
       end
       if tr.namespace
@@ -264,11 +279,11 @@ if (source_file && File.exists?(source_file)) || source_files
     else
       puts Hash[*(resdict.sort_by{|k,v| k}).flatten].to_yaml
     end
-    puts "\nCompleted!"
+    puts "\nCompleted!".green
   elsif opts[:split]
     ofile.write("\n</collection>")
     ofile.close
-    puts "\nCompleted: "+Time.new.strftime("%Y-%m-%d %H:%M:%S")
+    puts "\nCompleted: #{Time.new.strftime("%Y-%m-%d %H:%M:%S")}".green
   elsif opts[:report]
     puts result.to_s
     if opts['csv']
@@ -276,11 +291,11 @@ if (source_file && File.exists?(source_file)) || source_files
     elsif opts['xls']
       result.to_xls :index => 0, :reverse => false, :ofile => opts[:outfile]
     end
-    puts "\nCompleted: "+Time.new.strftime("%Y-%m-%d %H:%M:%S")
+    puts "\nCompleted: #{Time.new.strftime("%Y-%m-%d %H:%M:%S")}".green
   else
     xmlstream.close
-    puts "\nCompleted: "+Time.new.strftime("%Y-%m-%d %H:%M:%S")
+    puts "\nCompleted: #{Time.new.strftime("%Y-%m-%d %H:%M:%S")}".green
   end
 else
-  puts source_file + " is not a file!"
+  puts source_file + " is not a file!".red
 end

@@ -2,9 +2,9 @@
 require 'rubygems'
 require 'nokogiri'
 require 'rbconfig'
-require_relative 'logging'
-require_relative 'transformator'
-require_relative 'oracle_db'
+require_relative '../logging'
+require_relative '../transformator'
+require_relative '../oracle_db'
 
 module Marcxml
   class MuscatPerson < Transformator
