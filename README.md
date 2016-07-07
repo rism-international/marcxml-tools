@@ -19,8 +19,14 @@ Optional: --with-content: add sample content at end of line
 Example call: `marcxml -i input.xml -c config.yaml -o output.txt --with-content`  
  
 Example output: 
-
-
+```text
+100$0: 798888 (30020630)
+100$a: 798888 (Schmitt, Jakob)
+100$d: 765593 (1799-1853)
+100$j: 500026 (Conjectural)
+130$0: 612 (40000133)
+130$a: 40222 (8 Minuets)
+```
 ## marcxml --filter
 Creating a subset of records from the complete XML open dataset of sources at http://opac.rism.info. 
 Required: -c [Yaml-config-file]  
@@ -49,7 +55,7 @@ Semantic structure:
 
 ## marcxml --merge
 Merging an array of marcxml-files to one output-file.  
-Required: -i [list of input files]. 
+Required: -i [list of input files].  
 Example call: `marcxml --merge -i input1.xml input2.xml -o result.xml`
 
 ## marcxml --report
