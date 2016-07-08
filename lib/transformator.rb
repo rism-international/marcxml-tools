@@ -19,7 +19,6 @@ module Marcxml
       @node = node
       @methods = [:map]
     end
-
     
     def rename_subfield_code(tag, old_code, new_code)
       subfield=node.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{old_code}']", NAMESPACE)
@@ -66,7 +65,6 @@ module Marcxml
       node.xpath("//marc:datafield[@tag='#{tag}']", NAMESPACE).remove
     end
 
-
     def rename_datafield(tag, new_tag)
       if !node.xpath("//marc:datafield[@tag='#{new_tag}']", NAMESPACE).empty?
         puts "WARNING: Tag #{new_tag} already exits!"
@@ -85,7 +83,6 @@ module Marcxml
       subfield=node.xpath("//marc:datafield[@tag='040']/marc:subfield[@code='a']", NAMESPACE)
       subfield.each { |sf| sf.content = "DE-633" }
     end
-
 
     def split_hs(str)
       str.gsub!(/\?$/, "")
@@ -142,9 +139,13 @@ module Marcxml
         end
       end
     end
+
+    def repair_leader
+      leader = node.xpath("//marc:leader", NAMESPACE).first
+      leader.content = leader.content.gsub(/#/," ")
+    end
+
   end
-
-
 end
 
 

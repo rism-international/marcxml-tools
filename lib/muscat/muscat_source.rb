@@ -13,7 +13,7 @@ module Marcxml
       @namespace = namespace
       @node = node
       @methods =  [:change_leader, :change_material, :change_collection, :add_isil, :change_attribution, :prefix_performance, 
-       :split_730, :change_243, :change_593_abbreviation, :change_scoring, :transfer_url, :remove_unlinked_authorities, :map]
+       :split_730, :change_243, :change_593_abbreviation, :change_scoring, :transfer_url, :remove_unlinked_authorities, :map, :move_852c]
     end
 
     def check_material

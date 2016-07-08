@@ -10,7 +10,7 @@ require 'pry'
 require 'colorize'
 
 NAMESPACE={'marc' => "http://www.loc.gov/MARC21/slim"}
-SCHEMA_FILE="MARC21slim.xsd"
+SCHEMA_FILE="conf/MARC21slim.xsd"
 
 #OPTIONS
 opts = Trollop::options do
@@ -81,7 +81,9 @@ Dir[File.dirname(__FILE__) + '/lib/*.rb'].each do |file|
 end
 
 if opts[:muscat]
-  puts "You are using this program with the `--muscat`-flag; please be sure to have configured ORACLE-connection by enviroment!".yellow
+  if !ENV['ORACLE_HOST']
+    puts "You are using this program with the `--muscat`-flag; please be sure to have configured ORACLE-connection by enviroment!".yellow
+  end
   Dir[File.dirname(__FILE__) + '/lib/muscat/*.rb'].each do |file| 
     require file 
   end
@@ -130,6 +132,11 @@ elsif opts[:split]
   puts "###### Splitting #######"
   puts "########################"
   managed = "splitted"
+elsif opts[:merge]
+  managed = "merged"  
+  puts "########################"
+  puts "####### Merging ########"
+  puts "########################"
 elsif opts[:filter]
   managed = "filtered"  
   puts "########################"
@@ -140,12 +147,18 @@ elsif opts[:report]
   puts "###### Reporting #######"
   puts "########################"
   managed = "checked"
+elsif opts[:validate]
+  managed = "validating"  
+  puts "########################"
+  puts "###### Validating ######"
+  puts "########################"
 else
   managed = "parsed"
 end
 
-
-bar = ProgressBar.create(title: "Found", :format => "%c of %C Records #{managed}. -- %a | %B | %p%% %e".yellow, total: total, remainder_mark: '-', progress_mark: '#') unless opts[:merge]
+unless opts[:validate]
+  bar = ProgressBar.create(title: "Found", :format => "%c of %C Records #{managed}. -- %a | %B | %p%% %e".yellow, total: total, remainder_mark: '-', progress_mark: '#') unless opts[:merge]
+end
 
 if (source_file && File.exists?(source_file)) || source_files
   #Setting runtime variables
@@ -197,7 +210,7 @@ if (source_file && File.exists?(source_file)) || source_files
 
   #Start reading stream
   xmlstream = Marcxml::Xmlstream.new(ofile)
-  xmlstream.header unless (opts['csv'])
+  xmlstream.header unless (opts[:analyze] || opts[:report])
   xmlstream.each_record(source_file) do |record|
 
     if opts[:transform]

@@ -102,6 +102,25 @@ Define enviroment variables if you like to use the --muscat-flag (using Oracle-D
 * Probably Linux / Ubuntu 
 * Ruby
 
+## How to build new Transformator classes
+New transformator classes should inherit from Transformator class in module Marcxml. Every new transformator should declare an array named `methods` containing methods executed in order.
+This array should also include :map if mappings are defined in the Yaml-conf.  
+
+Example `lib/mytransformtor.rb`:
+```ruby
+module Marcxml
+  MyTransformator < Transformator
+    attr_accessor :node, :namespace, :methods
+    def initialize(node, namespace={'marc' => "http://www.loc.gov/MARC21/slim"})
+      @namespace = namespace
+      @node = node
+      @methods = [:add_isil, :change_cataloging_source, :repair_leader, :map]
+    end
+  end
+end
+
+```
+
 ## Links and tutorials
 * RISM Opendata: https://opac.rism.info/index.php?id=8&L=0
 * MARC21 Documentation: http://www.loc.gov/marc/bibliographic/  

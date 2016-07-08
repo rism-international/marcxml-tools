@@ -20,7 +20,7 @@ module Marcxml
       @namespace = namespace
       @node = node
       @methods = [:add_isil, :change_gender, :change_individualize, :change_035, :add_profession, 
-       :split_510, :add_670_id, :change_cataloging_source, :delete_empty_hs, :map]
+       :split_510, :add_670_id, :change_cataloging_source, :delete_empty_hs, :repair_leader, :map]
     end
 
     def add_profession
