@@ -28,7 +28,7 @@ Example output:
 130$a: 40222 (8 Minuets)
 ```
 ## marcxml --filter
-Creating a subset of records from the complete XML open dataset of sources at http://opac.rism.info. 
+Creating a subset of records from the complete XML open dataset of sources at http://opac.rism.info.  
 Required: -c [Yaml-config-file]  
 Optional: --with-linked: select also linked parent/child entries  
 Optional: --with-disjunct: select with logical disjunction  

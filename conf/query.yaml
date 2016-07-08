@@ -20,7 +20,7 @@
   #- "US-SA"
 
 #100$0: "30000391"
-#852$a: "CZ-Pu$"
+852$a: "D-Mmb$"
 
 #"490$a": "^A/I$"
 #"852$a": "US-WS"
@@ -32,7 +32,7 @@
 #  - "Bach, Johann Sebastian"
 #"852$a": "^D-B$"
 
-500$a: "Diese Musikquelle ist Gegenstand des DFG-Projekts .*Die Notenbestände der Dresdner Hofkirche und der Königlichen Privat-Musikaliensammlung"
+#500$a: "Diese Musikquelle ist Gegenstand des DFG-Projekts .*Die Notenbestände der Dresdner Hofkirche und der Königlichen Privat-Musikaliensammlung"
 #561$a: 
 #  - "Fürsten- und Landesschule, Grimma"
 #852$c: "^(?!.*?Mus.Gri.).*"
