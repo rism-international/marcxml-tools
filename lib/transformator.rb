@@ -122,7 +122,7 @@ module Marcxml
           if !v && k.is_tag_with_subfield?
             remove_subfield(k)
           elsif !v && k.is_tag?
-            remove_tag(k)
+            remove_datafield(k)
           # Rename datafield
           elsif k.is_tag? && v.is_tag?
             rename_datafield(k, v)

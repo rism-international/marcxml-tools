@@ -12,7 +12,7 @@ module Marcxml
     def initialize(node, namespace={'marc' => "http://www.loc.gov/MARC21/slim"})
       @namespace = namespace
       @node = node
-      @methods = [:add_isil, :change_media, {:remove_datafield => [508]}, :map]
+      @methods = [:add_isil, :change_media, :repair_leader, :map]
     end
 
     def change_media

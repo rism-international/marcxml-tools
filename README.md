@@ -88,7 +88,7 @@ Mapping:
   # Moving subfield $d to datafield 852
   - "591$d": "852"
 ```
-You can build much more transform logic with your own classes defined in the lib-folder. Then you have to declare the class-name in the Yaml-conf.
+You can build much more transform logic with your own classes defined in the lib-folder, see below. Then you have to declare the class-name in the Yaml-conf.
 
 ## marcxml --validate
 Validating input-file according to the official standard.  
@@ -104,7 +104,7 @@ Define enviroment variables if you like to use the --muscat-flag (using Oracle-D
 
 ## How to build new Transformator classes
 New transformator classes should inherit from Transformator class in module Marcxml. Every new transformator should declare an array named `methods` containing methods executed in order.
-This array should also include :map if mappings are defined in the Yaml-conf.  
+This array should also include :map if mappings are defined in the Yaml-conf; the new tranformator class should also be defined in the Yaml-conf.
 
 Example `lib/mytransformtor.rb`:
 ```ruby
@@ -116,10 +116,16 @@ module Marcxml
       @node = node
       @methods = [:add_isil, :change_cataloging_source, :repair_leader, :map]
     end
+    def change_cataloging_source
+      #function code
+    end
   end
 end
-
 ```
+## Optional database connection
+It is possible to use a database-connection to get external values directly from a database. Until now an Oracle connector is given in the lib-folder. 
+Credentials have to been declared in the enviroment.
+
 
 ## Links and tutorials
 * RISM Opendata: https://opac.rism.info/index.php?id=8&L=0
