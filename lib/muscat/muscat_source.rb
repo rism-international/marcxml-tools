@@ -288,15 +288,23 @@ module Marcxml
     def convert_593_abbreviation(str)
       case str
       when "mw"
-        return "other type"
+        return "Other"
       when "mt"
-        return "theoreticum, handwritten"
+        return "Treatise, handwritten"
       when "ml"
-        return "libretto, handwritten"
+        return "Libretto, handwritten"
       when "mu"
-        return "theoreticum, printed"
+        return "Treatise, printed"
       when "mv"
         return "unknown"
+      when "autograph"
+        return "Autograph manuscript"
+      when "partly autograph"
+        return "Partial autograph"
+      when "manuscript"
+        return "Manuscript copy"
+      when "probably autograph"
+        return "Possible autograph manuscript"
       else
         return str
       end
