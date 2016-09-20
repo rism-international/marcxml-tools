@@ -25,6 +25,7 @@ ruby marcxml --analyze -i export/muscat/institutions.xml -o export/muscat/instit
 
 echo "Digital Objects"
 cp input/rism_mm.xml export/muscat/digital_objects.xml
+cp input/rism_thesaurus.xml export/muscat/thesaurus.xml
 
 echo "Create Archive"
 tar -czf export/muscat/muscat3data_$DATE.tar.gz export/muscat/*.xml export/muscat/*.txt

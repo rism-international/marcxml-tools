@@ -13,7 +13,7 @@ module Marcxml
       @namespace = namespace
       @node = node
       @methods =  [:change_leader, :change_material, :change_collection, :add_isil, :change_attribution, :prefix_performance, 
-       :split_730, :change_243, :change_593_abbreviation, :change_scoring, :transfer_url, :remove_unlinked_authorities, :map, :move_852c]
+       :split_730, :change_243, :change_593_abbreviation, :change_scoring, :transfer_url, :remove_unlinked_authorities, :split_031t, :map, :move_852c]
     end
 
     def check_material
@@ -218,6 +218,24 @@ module Marcxml
       end
     end
 
+    def split_031t
+      datafields = node.xpath("//marc:datafield[@tag='031']", NAMESPACE)
+      return 0 if datafields.empty?
+      datafields.each do |datafield|
+        txt = datafield.xpath("marc:subfield[@code='t']", NAMESPACE)[0]
+        return 0 if !txt || !txt.content.include?(";")
+        texts = txt.content.split(";")
+        texts.each do |t|
+          sfk = Nokogiri::XML::Node.new "subfield", node
+          sfk['code'] = 't'
+          sfk.content = t.strip
+          datafield << sfk
+        end
+        txt.remove
+      end
+    end
+
+
 
     def remove_unlinked_authorities
       tags = %w(100$0 504$0 510$0 700$0 710$0 852$x)
@@ -245,7 +263,7 @@ module Marcxml
     def move_852c
       fields = node.xpath("//marc:datafield[@tag='852']", NAMESPACE)
       fields.each do |field|
-        subfields = field.xpath("marc:subfield[@code='p']", NAMESPACE)
+        subfields = field.xpath("marc:subfield[@code='c']", NAMESPACE)
         if subfields.size > 1
           rism_id = node.xpath("//marc:controlfield[@tag='001']", NAMESPACE).first.content
           logger.debug("DUBLICATE SHELFMARK NODE in #{rism_id}: #{field.to_s}")

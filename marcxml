@@ -80,6 +80,11 @@ Dir[File.dirname(__FILE__) + '/lib/*.rb'].each do |file|
   require file 
 end
 
+Dir[File.dirname(__FILE__) + '/lib/import_classes/*.rb'].each do |file| 
+  require file 
+end
+
+
 if opts[:muscat]
   if !ENV['ORACLE_HOST']
     puts "You are using this program with the `--muscat`-flag; please be sure to have configured ORACLE-connection by enviroment!".yellow
@@ -193,7 +198,7 @@ if (source_file && File.exists?(source_file)) || source_files
     puts "#{source_file} is a valid MARCXML-file!".green
     exit
   elsif opts[:merge]
-    xmlstream = Xmlstream.new(ofile)
+    xmlstream = Marcxml::Xmlstream.new(ofile)
     source_files.each do |sfile|
       puts sfile
       if File.exists?(sfile)
@@ -215,6 +220,7 @@ if (source_file && File.exists?(source_file)) || source_files
 
     if opts[:transform]
       tr = transform_class.new(record)
+      #tr.execute_all
       if opts[:muscat]
         tr.execute_all
       end

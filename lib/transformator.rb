@@ -66,7 +66,7 @@ module Marcxml
     end
 
     def rename_datafield(tag, new_tag)
-      if !node.xpath("//marc:datafield[@tag='#{new_tag}']", NAMESPACE).empty?
+      if !node.xpath("//marc:datafield[@tag='#{new_tag}']", NAMESPACE).empty? && !node.xpath("//marc:datafield[@tag='#{tag}']", NAMESPACE).empty?
         puts "WARNING: Tag #{new_tag} already exits!"
       end
       datafield=node.xpath("//marc:datafield[@tag='#{tag}']", NAMESPACE)

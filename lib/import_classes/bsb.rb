@@ -2,8 +2,7 @@
 require 'rubygems'
 require 'nokogiri'
 require 'rbconfig'
-require_relative 'logging'
-require_relative 'transformator'
+Dir[File.dirname(__FILE__) + '../*.rb'].each {|file| puts file; require file }
 
 # Class for mofifyiung of RISM OPAC at BSB
 module Marcxml
