@@ -13,7 +13,8 @@ module Marcxml
       @namespace = namespace
       @node = node
       @methods =  [:change_leader, :change_material, :change_collection, :add_isil, :change_attribution, :prefix_performance, 
-       :split_730, :change_243, :change_593_abbreviation, :change_scoring, :transfer_url, :remove_unlinked_authorities, :split_031t, :map, :move_852c]
+       :split_730, :change_243, :change_593_abbreviation, :change_scoring, :transfer_url, :remove_unlinked_authorities, 
+       :split_031t, :remove_852_from_b1, :rename_digitalisat, :map, :move_852c]
     end
 
     def check_material
@@ -223,7 +224,7 @@ module Marcxml
       return 0 if datafields.empty?
       datafields.each do |datafield|
         txt = datafield.xpath("marc:subfield[@code='t']", NAMESPACE)[0]
-        return 0 if !txt || !txt.content.include?(";")
+        next if !txt || !txt.content.include?(";")
         texts = txt.content.split(";")
         texts.each do |t|
           sfk = Nokogiri::XML::Node.new "subfield", node
@@ -235,6 +236,24 @@ module Marcxml
       end
     end
 
+    def remove_852_from_b1
+      series = node.xpath("//marc:datafield[@tag='490']/marc:subfield[@code='a']", NAMESPACE)
+      return 0 if series.empty? || series.first.content != 'B/I'
+      unless node.xpath("//marc:datafield[@tag='773']/marc:subfield[@code='w']", NAMESPACE).empty?
+        rnode = node.xpath("//marc:datafield[@tag='852']", NAMESPACE)
+        rnode.remove
+      end
+    end
+
+    def rename_digitalisat
+      subfields = node.xpath("//marc:datafield[@tag='856']/marc:subfield[@code='z']", NAMESPACE)
+      return 0 if subfields.empty?
+      subfields.each do |subfield|
+        if subfield.content == 'DIGITALISAT'
+          subfield.content = "[digitized version]"
+        end
+      end
+    end
 
 
     def remove_unlinked_authorities
