@@ -14,7 +14,7 @@ module Marcxml
       @node = node
       @methods =  [:change_leader, :change_material, :change_collection, :add_isil, :change_attribution, :prefix_performance, 
        :split_730, :change_243, :change_593_abbreviation, :change_scoring, :transfer_url, :remove_unlinked_authorities, 
-       :split_031t, :remove_852_from_b1, :rename_digitalisat, :map, :move_852c]
+       :split_031t, :remove_852_from_b1, :rename_digitalisat, :copy_roles, :map, :move_852c]
     end
 
     def check_material
@@ -121,9 +121,6 @@ module Marcxml
       #rnode = node.xpath("//marc:datafield[@tag='594']", NAMESPACE).first
       #rnode.remove if rnode
     end
-
-
-
 
     def change_attribution
       subfield100=node.xpath("//marc:datafield[@tag='100']/marc:subfield[@code='j']", NAMESPACE)
@@ -244,6 +241,31 @@ module Marcxml
         rnode.remove
       end
     end
+
+    def copy_roles
+      incipit_roles = node.xpath("//marc:datafield[@tag='031']/marc:subfield[@code='e']", NAMESPACE)
+      return 0 if incipit_roles.empty?
+      existing_roles = []
+      node.xpath("//marc:datafield[@tag='595']/marc:subfield[@code='a']", NAMESPACE).each do |e|
+        existing_roles << Marcxml::ApplicationHelper.normalize_role(e.content)
+      end
+      incipit_roles.each do |role|
+        normalized_role = Marcxml::ApplicationHelper.normalize_role(role.content)
+        if !existing_roles.include?(normalized_role)  
+          tag = Nokogiri::XML::Node.new "datafield", node
+          tag['tag'] = '595'
+          tag['ind1'] = ' '
+          tag['ind2'] = ' '
+          sfa = Nokogiri::XML::Node.new "subfield", node
+          sfa['code'] = 'a'
+          sfa.content = normalized_role  
+          existing_roles << normalized_role
+          tag << sfa
+          node.root << tag
+        end
+      end
+    end
+
 
     def rename_digitalisat
       subfields = node.xpath("//marc:datafield[@tag='856']/marc:subfield[@code='z']", NAMESPACE)

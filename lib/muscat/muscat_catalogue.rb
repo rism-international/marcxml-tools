@@ -12,7 +12,7 @@ module Marcxml
     def initialize(node, namespace={'marc' => "http://www.loc.gov/MARC21/slim"})
       @namespace = namespace
       @node = node
-      @methods = [:add_isil, :change_media, :repair_leader, :map]
+      @methods = [:add_isil, :change_media, :change_ks_relator, :repair_leader, :map]
     end
 
     def change_media
@@ -20,12 +20,18 @@ module Marcxml
       subfield.each { |sf| sf.content = convert_media(sf.content) }
     end
 
+    def change_ks_relator
+      subfield=node.xpath("//marc:datafield[@tag='710']/marc:subfield[@code='4']", NAMESPACE)
+      subfield.each { |sf| sf.content = convert_ks_relator(sf.content) }
+    end
+
+
     def convert_media(str)
       case str
       when "0"
-        return "Printed book"
+        return "Printed medium"
       when "ae"
-        return "Sheet music"
+        return "Printed music"
       when "1"
         return "Manuscript"
       when "er"
@@ -33,11 +39,38 @@ module Marcxml
       when "aj"
         return "CD-ROM"
       when "ak"
-        return "Combination"
+        return "Media combination"
+      when "eb"
+        return "E-book"
+      when "l"
+        return "Microfiche"
+      when "o"
+        return "Microfilm"
       else
         return "Other"
       end
     end
+
+    def convert_ks_relator(str)
+      case str
+      when "A"
+        return "dnr"
+      when "B"
+        return "fmo"
+      when "E"
+        return "prf"
+      when "H"
+        return "edt"
+      when "P"
+        return "asn"
+      when "WI"
+        return "dte"
+      else
+        return str
+      end
+    end
+
+
   end
 
 end

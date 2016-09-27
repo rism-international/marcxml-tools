@@ -21,5 +21,9 @@ module Marcxml
       end
       return total
     end
+
+    def self.normalize_role(str)
+      return str.gsub(/[\[\]]/, "").gsub(/\s+\(.*$/, "").strip
+    end
   end
 end

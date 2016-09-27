@@ -8,7 +8,7 @@ echo "Get data"
 #tar -xzvf input/muscat3_export.tar.gz -C input
 
 echo "Sources"
-ruby marcxml --transform -i input/rism_sources.xml -c conf/transform_sources_muscat.yaml -o export/muscat/sources.xml --muscat
+#ruby marcxml --transform -i input/rism_sources.xml -c conf/transform_sources_muscat.yaml -o export/muscat/sources.xml --muscat
 #ruby marcxml --analyze -i export/muscat/sources.xml -o export/muscat/sources_analyze.txt --with-content
 
 echo "People"
@@ -16,7 +16,7 @@ echo "People"
 #ruby marcxml --analyze -i export/muscat/people.xml -o export/muscat/people_analyze.txt --with-content
 
 echo "Catalogue"
-#ruby marcxml --transform -i input/rism_lit.xml -c conf/transform_catalogue.yaml -o export/muscat/catalogue.xml --muscat
+ruby marcxml --transform -i input/rism_lit.xml -c conf/transform_catalogue.yaml -o export/muscat/catalogue.xml --muscat
 #ruby marcxml --analyze -i export/muscat/catalogue.xml -o export/muscat/catalogue_analyze.txt --with-content
 
 echo "Institutions"
@@ -28,6 +28,6 @@ echo "Digital Objects"
 #cp input/rism_thesaurus.xml export/muscat/thesaurus.xml
 
 echo "Create Archive"
-tar -czf export/muscat/muscat3data_$DATE.tar.gz export/muscat/*.xml export/muscat/*.txt
+#tar -czf export/muscat/muscat3data_$DATE.tar.gz export/muscat/*.xml export/muscat/*.txt
 
 echo "Completed!"
