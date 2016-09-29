@@ -3,31 +3,31 @@
 #echo "$PWD"
 DATE=`date +%Y%m%d`
 echo "Get data"
-#scp repo.rism.info:/home/stephan/BSB/pool/muscat3_export.tar.gz input/
-#cp input/muscat3_export.tar.gz input/dataset_$DATE.tar.gz
-#tar -xzvf input/muscat3_export.tar.gz -C input
+scp repo.rism.info:/home/stephan/BSB/pool/muscat3_export.tar.gz input/
+cp input/muscat3_export.tar.gz input/dataset_$DATE.tar.gz
+tar -xzvf input/muscat3_export.tar.gz -C input
 
 echo "Sources"
-#ruby marcxml --transform -i input/rism_sources.xml -c conf/transform_sources_muscat.yaml -o export/muscat/sources.xml --muscat
-#ruby marcxml --analyze -i export/muscat/sources.xml -o export/muscat/sources_analyze.txt --with-content
+ruby marcxml --transform -i input/rism_sources.xml -c conf/transform_sources_muscat.yaml -o export/muscat/sources.xml --muscat
+ruby marcxml --analyze -i export/muscat/sources.xml -o export/muscat/sources_analyze.txt --with-content
 
 echo "People"
-#ruby marcxml --transform -i input/rism_pe.xml -c conf/transform_person.yaml -o export/muscat/people.xml --muscat
-#ruby marcxml --analyze -i export/muscat/people.xml -o export/muscat/people_analyze.txt --with-content
+ruby marcxml --transform -i input/rism_pe.xml -c conf/transform_person.yaml -o export/muscat/people.xml --muscat
+ruby marcxml --analyze -i export/muscat/people.xml -o export/muscat/people_analyze.txt --with-content
 
 echo "Catalogue"
 ruby marcxml --transform -i input/rism_lit.xml -c conf/transform_catalogue.yaml -o export/muscat/catalogue.xml --muscat
-#ruby marcxml --analyze -i export/muscat/catalogue.xml -o export/muscat/catalogue_analyze.txt --with-content
+ruby marcxml --analyze -i export/muscat/catalogue.xml -o export/muscat/catalogue_analyze.txt --with-content
 
 echo "Institutions"
-#ruby marcxml --transform -i input/rism_ks.xml -c conf/transform_institutions.yaml -o export/muscat/institutions.xml --muscat
-#ruby marcxml --analyze -i export/muscat/institutions.xml -o export/muscat/institutions_analyze.txt --with-content
+ruby marcxml --transform -i input/rism_ks.xml -c conf/transform_institutions.yaml -o export/muscat/institutions.xml --muscat
+ruby marcxml --analyze -i export/muscat/institutions.xml -o export/muscat/institutions_analyze.txt --with-content
 
 echo "Digital Objects"
-#cp input/rism_mm.xml export/muscat/digital_objects.xml
-#cp input/rism_thesaurus.xml export/muscat/thesaurus.xml
+cp input/rism_mm.xml export/muscat/digital_objects.xml
+cp input/rism_thesaurus.xml export/muscat/thesaurus.xml
 
 echo "Create Archive"
-#tar -czf export/muscat/muscat3data_$DATE.tar.gz export/muscat/*.xml export/muscat/*.txt
+tar -czf export/muscat/muscat3data_$DATE.tar.gz export/muscat/*.xml export/muscat/*.txt
 
 echo "Completed!"

@@ -14,7 +14,7 @@ module Marcxml
       @node = node
       @methods =  [:change_leader, :change_material, :change_collection, :add_isil, :change_attribution, :prefix_performance, 
        :split_730, :change_243, :change_593_abbreviation, :change_scoring, :transfer_url, :remove_unlinked_authorities, 
-       :split_031t, :remove_852_from_b1, :rename_digitalisat, :copy_roles, :map, :move_852c]
+       :split_031t, :remove_852_from_b1, :rename_digitalisat, :copy_roles, :map, :move_852c, :move_490]
     end
 
     def check_material
@@ -323,6 +323,35 @@ module Marcxml
         end
       end
     end
+
+    def move_490
+      series = node.xpath("//marc:datafield[@tag='490']", NAMESPACE)[0]
+      series_entry = node.xpath("//marc:datafield[@tag='490']/marc:subfield[@code='a']", NAMESPACE)[0]
+      location_entry = node.xpath("//marc:datafield[@tag='035']/marc:subfield[@code='a']", NAMESPACE)[0]
+      existent_510 = node.xpath("//marc:datafield[@tag='510']", NAMESPACE)[0]
+      return 0 unless series_entry
+      if existent_510
+        series.remove
+      else
+        tag = Nokogiri::XML::Node.new "datafield", node
+        tag['tag'] = '510'
+        tag['ind1'] = ' '
+        tag['ind2'] = ' '
+        sfa = Nokogiri::XML::Node.new "subfield", node
+        sfa['code'] = 'a'
+        sfa.content = "RISM " + series_entry.content
+        tag << sfa
+        if location_entry
+          sfc = Nokogiri::XML::Node.new "subfield", node
+          sfc['code'] = 'c'
+          sfc.content = location_entry.content
+          tag << sfc
+        end
+        node.root << tag
+        series.remove
+      end
+    end
+
 
 
     def convert_attribution(str)
