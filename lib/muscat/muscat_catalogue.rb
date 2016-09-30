@@ -12,7 +12,7 @@ module Marcxml
     def initialize(node, namespace={'marc' => "http://www.loc.gov/MARC21/slim"})
       @namespace = namespace
       @node = node
-      @methods = [:add_isil, :change_media, :change_ks_relator, :repair_leader, :map]
+      @methods = [:add_isil, :change_media, :change_ks_relator, :repair_leader, :add_short_title, :map]
     end
 
     def change_media
@@ -24,6 +24,36 @@ module Marcxml
       subfield=node.xpath("//marc:datafield[@tag='710']/marc:subfield[@code='4']", NAMESPACE)
       subfield.each { |sf| sf.content = convert_ks_relator(sf.content) }
     end
+
+    def add_short_title
+      return 0 unless node.xpath("//marc:datafield[@tag='210']/marc:subfield[@code='a']", NAMESPACE).empty?
+      if a = node.xpath("//marc:datafield[@tag='700']/marc:subfield[@code='a']", NAMESPACE)[0]
+        author = a.content.split(",").first
+      else
+        author = ""
+      end
+      if y = node.xpath("//marc:datafield[@tag='260']/marc:subfield[@code='c']", NAMESPACE)[0]
+        year = y.content
+      else
+        year = ""
+      end
+      if t = node.xpath("//marc:datafield[@tag='240']/marc:subfield[@code='a']", NAMESPACE)[0]
+        title = t.content.split(" ")[0..2].join("")
+      else
+        title = "xxxx"
+      end
+      short_title = "#{author}#{title} #{year}"
+      tag = Nokogiri::XML::Node.new "datafield", node
+          tag['tag'] = '210'
+          tag['ind1'] = ' '
+          tag['ind2'] = ' '
+          sfa = Nokogiri::XML::Node.new "subfield", node
+          sfa['code'] = 'a'
+          sfa.content = short_title
+          tag << sfa
+          node.root << tag
+    end
+
 
 
     def convert_media(str)
