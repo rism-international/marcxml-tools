@@ -1,3 +1,4 @@
+# encoding: UTF-8
 #!/usr/bin/env ruby
 require 'nokogiri'
 
@@ -33,6 +34,10 @@ module Marcxml
       nodes.sort_by{|node| [node.attr("tag"), nodes.index(node)]}.each{|node| 
         record.root.add_child(node)}
       record_string = record.to_s.gsub("&lt;", "[").gsub("&gt;", "]")
+        .gsub("Îş", "α")
+        .gsub("Îż", "ω")
+        .gsub("ÎÆ", "φ")
+
       doc = Nokogiri::XML.parse(record_string) do |config|
         config.noblanks
       end
