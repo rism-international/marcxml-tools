@@ -173,6 +173,7 @@ if (source_file && File.exists?(source_file)) || source_files
     Marcxml::Transformator.mapping = transform['Mapping']
   elsif opts[:analyze]
     resdict=Hash.new(0)
+    resdict['*MAX'] = 0
     content_dict={}
   elsif opts[:filter]
     filter_class = Marcxml::Filter
@@ -250,6 +251,8 @@ if (source_file && File.exists?(source_file)) || source_files
     #break if start==100
 
     elsif opts[:analyze]
+      isn = record.xpath('//marc:controlfield[@tag="001"]', NAMESPACE)[0].content.to_i
+      resdict['*MAX'] = isn if isn > resdict['*MAX']
       record.xpath('//marc:controlfield', NAMESPACE).each do |node|
         resdict[node["tag"]]+=1
         if opts["with-content"] && !content_dict.has_key?(node["tag"])

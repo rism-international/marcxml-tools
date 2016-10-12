@@ -12,9 +12,9 @@ module Marcxml
     def initialize(node, namespace={'marc' => "http://www.loc.gov/MARC21/slim"})
       @namespace = namespace
       @node = node
-      @methods =  [:change_leader, :change_material, :change_collection, :add_isil, :change_attribution, :prefix_performance, 
+      @methods =  [:change_leader, :change_005, :change_material, :change_collection, :add_isil, :change_attribution, :prefix_performance, 
        :split_730, :change_243, :change_593_abbreviation, :change_scoring, :transfer_url, :remove_unlinked_authorities, 
-       :split_031t, :remove_852_from_b1, :rename_digitalisat, :copy_roles, :map, :move_852c, :move_490]
+       :split_031t, :remove_852_from_b1, :rename_digitalisat, :copy_roles, :change_300a, :map, :move_852c, :move_490]
     end
 
     def check_material
@@ -70,6 +70,13 @@ module Marcxml
         node.root.children.first.add_previous_sibling(leader)
       end
       leader
+    end
+
+    def change_005
+      controlfield=node.xpath("//marc:controlfield[@tag='005']", NAMESPACE)[0]
+      if controlfield.content.start_with?('20100250')
+        controlfield.content="20050101111111.0"
+      end
     end
 
     def change_collection
@@ -135,6 +142,19 @@ module Marcxml
       subfield=node.xpath("//marc:datafield[@tag='593']/marc:subfield[@code='a']", NAMESPACE)
       subfield.each { |sf| sf.content = convert_593_abbreviation(sf.content) }
     end
+
+    def change_300a
+      subfield=node.xpath("//marc:datafield[@tag='300']/marc:subfield[@code='a']", NAMESPACE)
+      subfield.each do |sf|
+        return 0 unless sf.content.include?("St") || sf.content.include?("P") || sf.content.include?("KLA")
+        content = []
+        sf.content.split(";").each do |c|
+          content << convert_300a(c.strip)
+        end
+        sf.content = content.join("; ")
+      end
+    end
+
 
     def change_243
       tags=node.xpath("//marc:datafield[@tag='243']", NAMESPACE)
@@ -417,7 +437,18 @@ module Marcxml
       end
     end
 
-    
+    def convert_300a(str)
+      case str
+      when "KLA"
+        return "short score"
+      when "P"
+        return "score"
+      when "St"
+        return "part(s)"
+      else
+        return str
+      end
+    end
 
     def split_hs(str)
       str.gsub!(/\?$/, "")
