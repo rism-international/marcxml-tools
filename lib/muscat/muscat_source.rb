@@ -183,16 +183,15 @@ module Marcxml
             logger.debug("DROPPED MULTIMEDIA LINK in #{rism_id}: #{sf.parent.to_s}")
             sf.parent.remove
           else
-            #puts sf.content
-            urlbem = sf.content.split(": ")[0]
-            url = sf.content.split(": ")[1]
+            urlbem = sf.content.split(": ")[0..-2].join(": ")
+            url = sf.content.split(": ")[-1]
             tag_856 = Nokogiri::XML::Node.new "datafield", node
             tag_856['tag'] = '856'
             tag_856['ind1'] = '0'
             tag_856['ind2'] = ' '
             sfa = Nokogiri::XML::Node.new "subfield", node
             sfa['code'] = 'u'
-            sfa.content = url
+            sfa.content = url.gsub(/\.$/, "")
             sf2 = Nokogiri::XML::Node.new "subfield", node
             sf2['code'] = 'z'
             sf2.content = urlbem

@@ -26,6 +26,7 @@ module Marcxml
     end
 
     def copy_110c
+      return 0 unless node.xpath("//marc:datafield[@tag='569']/marc:subfield[@code='a']", NAMESPACE).empty?
       subfield=node.xpath("//marc:datafield[@tag='110']/marc:subfield[@code='c']", NAMESPACE)
       subfield.each do |sf|
         tag = Nokogiri::XML::Node.new "datafield", node
@@ -38,6 +39,7 @@ module Marcxml
         tag << sfa
         node.root << tag
       end
+      binding.pry
     end
 
 
