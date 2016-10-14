@@ -12,7 +12,7 @@ module Marcxml
     def initialize(node, namespace={'marc' => "http://www.loc.gov/MARC21/slim"})
       @namespace = namespace
       @node = node
-      @methods =  [:change_leader, :change_005, :change_material, :change_collection, :add_isil, :change_attribution, :prefix_performance, 
+      @methods =  [:change_leader, :change_005, :copy_create_date, :change_material, :change_collection, :add_isil, :change_attribution, :prefix_performance, 
        :split_730, :change_243, :change_593_abbreviation, :change_scoring, :transfer_url, :remove_unlinked_authorities, 
        :split_031t, :remove_852_from_b1, :rename_digitalisat, :copy_roles, :change_300a, :map, :move_852c, :move_490]
     end
@@ -371,6 +371,14 @@ module Marcxml
       end
     end
 
+    def copy_create_date
+      date005 = node.xpath("//marc:controlfield[@tag='005']", NAMESPACE)[0]
+      return 0 if !date005 && date005.empty?
+      crdate = date005.content[2..7]
+      date008 = node.xpath("//marc:controlfield[@tag='008']", NAMESPACE)[0]
+      return 0 if !date008 && date008.empty? && !date008.content
+      date008.content = crdate + date008.content[6..-1]
+    end
 
 
     def convert_attribution(str)
