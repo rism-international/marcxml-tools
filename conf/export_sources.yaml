@@ -1,0 +1,6 @@
+Class: BSB
+Mapping:
+  - "599": ~
+
+#"move subfields":
+  #- "931$h": "100"

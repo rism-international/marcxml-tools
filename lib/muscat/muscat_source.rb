@@ -373,10 +373,10 @@ module Marcxml
 
     def copy_create_date
       date005 = node.xpath("//marc:controlfield[@tag='005']", NAMESPACE)[0]
-      return 0 if !date005 && date005.empty?
+      return 0 if !date005
       crdate = date005.content[2..7]
       date008 = node.xpath("//marc:controlfield[@tag='008']", NAMESPACE)[0]
-      return 0 if !date008 && date008.empty? && !date008.content
+      return 0 if !date008
       date008.content = crdate + date008.content[6..-1]
     end
 
@@ -420,6 +420,12 @@ module Marcxml
         return "Manuscript copy"
       when "probably autograph"
         return "Possible autograph manuscript"
+      when "mk"
+        return "Libretto, printed"
+      when "mz"
+        return "Music periodical"
+      when "4"
+        return "Other"
       else
         return str
       end

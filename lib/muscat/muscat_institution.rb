@@ -39,7 +39,6 @@ module Marcxml
         tag << sfa
         node.root << tag
       end
-      binding.pry
     end
 
 

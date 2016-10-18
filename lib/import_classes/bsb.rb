@@ -12,7 +12,8 @@ module Marcxml
     def initialize(node, namespace={'marc' => "http://www.loc.gov/MARC21/slim"})
       @namespace = namespace
       @node = node
-      @methods =  [:add_material_to_copyist]
+      #@methods =  [:add_material_to_copyist]
+      @methods =  [:map]
     end
 
     # This method add a material linkage to copyists in the first material

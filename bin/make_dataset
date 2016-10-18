@@ -3,9 +3,9 @@
 #echo "$PWD"
 DATE=`date +%Y%m%d`
 echo "Get data"
-scp repo.rism.info:/home/stephan/BSB/pool/muscat3_export.tar.gz input/
-cp input/muscat3_export.tar.gz input/dataset_$DATE.tar.gz
-tar -xzvf input/muscat3_export.tar.gz -C input
+#scp repo.rism.info:/home/stephan/BSB/pool/muscat3_export.tar.gz input/
+#cp input/muscat3_export.tar.gz input/dataset_$DATE.tar.gz
+#tar -xzvf input/muscat3_export.tar.gz -C input
 
 echo "Sources"
 ruby marcxml --transform -i input/rism_sources.xml -c conf/transform_sources_muscat.yaml -o export/muscat/sources.xml --muscat
