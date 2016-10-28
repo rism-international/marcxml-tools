@@ -14,7 +14,7 @@ module Marcxml
       @node = node
       @methods =  [:change_leader, :change_005, :copy_create_date, :change_material, :change_collection, :add_isil, :change_attribution, :prefix_performance, 
        :split_730, :change_243, :change_593_abbreviation, :change_scoring, :transfer_url, :remove_unlinked_authorities, 
-       :split_031t, :remove_852_from_b1, :rename_digitalisat, :copy_roles, :change_300a, :map, :move_852c, :move_490]
+       :split_031t, :remove_852_from_b1, :rename_digitalisat, :copy_roles, :change_300a, :move_300a, :change_700_relator, :map, :move_852c, :move_490]
     end
 
     def check_material
@@ -138,6 +138,12 @@ module Marcxml
       subfield710.each { |sf| sf.content = convert_attribution(sf.content) }
     end
 
+    def change_700_relator
+      subfield700=node.xpath("//marc:datafield[@tag='700']/marc:subfield[@code='4']", NAMESPACE)
+      subfield700.each { |sf| sf.content = convert_700_relator(sf.content) }
+    end
+
+
     def change_593_abbreviation
       subfield=node.xpath("//marc:datafield[@tag='593']/marc:subfield[@code='a']", NAMESPACE)
       subfield.each { |sf| sf.content = convert_593_abbreviation(sf.content) }
@@ -155,6 +161,12 @@ module Marcxml
       end
     end
 
+    def change_260c
+      subfield=node.xpath("//marc:datafield[@tag='260']/marc:subfield[@code='c']", NAMESPACE)
+      subfield.each do |sf|
+        sf.content = sf.content.gsub("0000", "")
+      end
+    end
 
     def change_243
       tags=node.xpath("//marc:datafield[@tag='243']", NAMESPACE)
@@ -380,6 +392,34 @@ module Marcxml
       date008.content = crdate + date008.content[6..-1]
     end
 
+    def move_300a
+      return 0 if node.xpath("//marc:datafield[@tag='590']", NAMESPACE).empty?
+      extend_nodes = node.xpath("//marc:datafield[@tag='300']", NAMESPACE)
+      material_levels = {}
+      extend_nodes.each do |extent|
+        sf_300_a = extent.xpath("marc:subfield[@code='a']", NAMESPACE)
+        next unless sf_300_a.first.content =~ /part/
+        sf_300_a_content = sf_300_a.first.content.split(":")
+        material_extent = sf_300_a_content[1..-1].join(" ").strip
+        score = sf_300_a_content[0]
+        sf_300_8 = extent.xpath("marc:subfield[@code='8']", NAMESPACE)
+        material_link = sf_300_8.first.content
+        material_levels[material_link] = material_extent
+        sf_300_a.first.content = score.strip
+      end
+      new_590 = node.xpath("//marc:datafield[@tag='590']", NAMESPACE)
+      new_590.each do |n|
+        sf_590_8 = n.xpath("marc:subfield[@code='8']", NAMESPACE)
+        new_material_link = sf_590_8.first.content
+        if material_levels.keys.include?(new_material_link)
+            sfb = Nokogiri::XML::Node.new "subfield", node
+            sfb['code'] = 'b'
+            sfb.content = material_levels[new_material_link]
+            n << sfb
+        end
+      end
+    end
+
 
     def convert_attribution(str)
       case str
@@ -462,6 +502,18 @@ module Marcxml
         return str
       end
     end
+
+    def convert_700_relator(str)
+      case str
+      when "clb"
+        return "ctb"
+      when "asn"
+        return "oth"
+      else
+        return str
+      end
+    end
+
 
     def split_hs(str)
       str.gsub!(/\?$/, "")
