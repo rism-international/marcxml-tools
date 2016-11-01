@@ -33,10 +33,13 @@ module Marcxml
     def append(record, nodes)
       nodes.sort_by{|node| [node.attr("tag"), nodes.index(node)]}.each{|node| 
         record.root.add_child(node)}
-      record_string = record.to_s.gsub("&lt;", "[").gsub("&gt;", "]")
+      record_string = record.to_s.gsub("&lt;br&gt;", "{{brk}}")
         .gsub("Îş", "α")
         .gsub("Îż", "ω")
         .gsub("ÎÆ", "φ")
+        .gsub("*m33", "m̅")
+        .gsub("*n33", "n̅")
+        #.gsub("&lt;", "[").gsub("&gt;", "]")
 
       doc = Nokogiri::XML.parse(record_string) do |config|
         config.noblanks

@@ -12,9 +12,11 @@ module Marcxml
     def initialize(node, namespace={'marc' => "http://www.loc.gov/MARC21/slim"})
       @namespace = namespace
       @node = node
-      @methods =  [:change_leader, :change_005, :copy_create_date, :change_material, :change_collection, :add_isil, :change_attribution, :prefix_performance, 
+      @methods =  [:change_leader, :change_005, :copy_create_date, :change_material, :change_collection, 
+        :add_isil, :change_attribution, :prefix_performance, 
        :split_730, :change_243, :change_593_abbreviation, :change_scoring, :transfer_url, :remove_unlinked_authorities, 
-       :split_031t, :remove_852_from_b1, :rename_digitalisat, :copy_roles, :change_300a, :move_300a, :change_700_relator, :map, :move_852c, :move_490]
+       :split_031t, :remove_852_from_b1, :rename_digitalisat, :copy_roles, :change_300a, :move_300a, :change_700_relator, 
+       :map, :move_852c, :move_490]
     end
 
     def check_material
@@ -180,13 +182,19 @@ module Marcxml
     end
 
     def transfer_url
-      subfields=node.xpath("//marc:datafield[@tag='856']/marc:subfield[@code='u']", NAMESPACE)
-      subfields.each do |sf|
-        sf2 = Nokogiri::XML::Node.new "subfield", node
-        sf2['code'] = 'z'
-        sf2.content = 'DIGITALISAT'
-        sf.parent << sf2
+      url_nodes = node.xpath("//marc:datafield[@tag='856']", NAMESPACE)
+      return 0 if url_nodes.empty?
+      url_nodes.each do |n|
+        urlbem = n.xpath("marc:subfield[@code='z']", NAMESPACE)
+        if urlbem.empty?
+          sf2 = Nokogiri::XML::Node.new "subfield", node
+          sf2['code'] = 'z'
+          sf2.content = 'DIGITALISAT'
+          n << sf2
+        end
       end
+# This section is disabled by request
+=begin
       subfields=node.xpath("//marc:datafield[@tag='500']/marc:subfield[@code='a']", NAMESPACE)
       subfields.each do |sf|
         if sf.content.ends_with_url?
@@ -213,6 +221,7 @@ module Marcxml
           end
         end
       end
+=end
     end
 
     def prefix_performance
@@ -393,7 +402,8 @@ module Marcxml
     end
 
     def move_300a
-      return 0 if node.xpath("//marc:datafield[@tag='590']", NAMESPACE).empty?
+      return 0 if node.xpath("//marc:datafield[@tag='590']/marc:subfield[@code='8']", NAMESPACE).empty?
+      material_links_in_590 = node.xpath("//marc:datafield[@tag='590']/marc:subfield[@code='8']", NAMESPACE).map{|l| l.content}
       extend_nodes = node.xpath("//marc:datafield[@tag='300']", NAMESPACE)
       material_levels = {}
       extend_nodes.each do |extent|
@@ -403,10 +413,15 @@ module Marcxml
         material_extent = sf_300_a_content[1..-1].join(" ").strip
         score = sf_300_a_content[0]
         sf_300_8 = extent.xpath("marc:subfield[@code='8']", NAMESPACE)
+        next if sf_300_8.empty?
         material_link = sf_300_8.first.content
         material_levels[material_link] = material_extent
-        sf_300_a.first.content = score.strip
+        # Only change 300$a if there is a corresponding field in 590$8
+        if material_links_in_590.include?(material_link)
+          sf_300_a.first.content = score.strip
+        end
       end
+      
       new_590 = node.xpath("//marc:datafield[@tag='590']", NAMESPACE)
       new_590.each do |n|
         sf_590_8 = n.xpath("marc:subfield[@code='8']", NAMESPACE)
