@@ -14,7 +14,7 @@ module Marcxml
       @node = node
       @methods =  [:change_leader, :change_005, :copy_create_date, :change_material, :change_collection, 
         :add_isil, :change_attribution, :prefix_performance, 
-       :split_730, :change_243, :change_593_abbreviation, :change_scoring, :transfer_url, :remove_unlinked_authorities, 
+       :split_730, :change_243, :change_593_abbreviation, :change_scoring, :remove_unlinked_authorities, 
        :split_031t, :remove_852_from_b1, :rename_digitalisat, :copy_roles, :change_300a, :move_300a, :change_700_relator, 
        :map, :move_852c, :move_490]
     end
@@ -311,8 +311,13 @@ module Marcxml
       subfields = node.xpath("//marc:datafield[@tag='856']/marc:subfield[@code='z']", NAMESPACE)
       return 0 if subfields.empty?
       subfields.each do |subfield|
-        if subfield.content == 'DIGITALISAT'
-          subfield.content = "[digitized version]"
+        if subfield.content =~ /^Digitalisat/
+          if subfield.content == 'Digitalisat'
+            subfield.content = "[digitized version]"
+          else
+            subfield.content = "[digitized version] #{subfield.content}"
+            binding.pry
+          end
         end
       end
     end
