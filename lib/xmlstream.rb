@@ -49,8 +49,8 @@ module Marcxml
         .gsub("Ã¨","è")
         .gsub("Ã©","é")
         .gsub("Ã§","ç")
-
-        #.gsub("&lt;", "[").gsub("&gt;", "]")
+        .gsub("&lt;", "[")
+        .gsub("&gt;", "]")
 
       doc = Nokogiri::XML.parse(record_string) do |config|
         config.noblanks
