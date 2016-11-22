@@ -1,0 +1,66 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'yaml'
+require 'nokogiri'
+require 'trollop'
+require 'ruby-progressbar'
+require 'rbconfig'
+require 'zip'
+require 'pry'
+require 'colorize'
+YAML::ENGINE.yamler='psych'
+#YAML::ENGINE.yamler='syck'
+#OPTIONS
+opts = Trollop::options do
+  version "RISM Marcxml 0.1 (2016.07)"
+  banner <<-EOS
+This utility program changes MARCXML nodes according to an YAML file. 
+Overall required argument is -i [inputfile].
+
+Usage:
+   marcxml [-cio] [-aftmrsd] [--with-content --with-linked --with-disjunct --zip --with-limit]
+where [options] are:
+  EOS
+#  opt :infile, "Input-Filename", :type => :strings, :short => "-i"
+  opt :outfile, "Output-Filename", :type => :string, :default => "out.xml", :short => '-o'
+end
+
+Dir['/home/stephan/projects/marcxml-tools/lib/*.rb'].each do |file| 
+  require file 
+end
+
+
+connection = OracleDB.new.connection
+#Trollop::die :infile, "must exist" if !opts[:infile]
+Trollop::die :outfile, "must exist" if opts[:report]
+
+##if opts[:infile].size == 1
+#  source_file = opts[:infile].first
+#else
+#  source_files = opts[:infile]
+#end
+
+ofile=File.open(opts[:outfile], "w")
+
+result = {}
+  #Start reading stream
+curs = connection.exec("select rismnr,affdat,afftxt from ss_afftxt order by rismnr")
+while x = curs.fetch_hash
+  rismnr = x['RISMNR']
+  next unless x['AFFDAT']
+  affdat = x['AFFDAT'].gsub(/0000/, "") rescue ""
+  afftxt = x['AFFTXT']
+  unless result[rismnr]
+    result[rismnr] = [ {affdat => afftxt} ]
+  else
+    result[rismnr] << { affdat => afftxt }
+  end
+end
+
+if ofile
+  ofile.write(result.to_yaml)
+  ofile.close
+  puts "\nCompleted!".green
+else
+  puts source_file + " is not a file!".red
+end

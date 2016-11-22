@@ -20,6 +20,7 @@ GEM
     ruby-progressbar (1.7.5)
     rubyzip (1.1.7)
     slop (3.6.0)
+    sqlite3 (1.3.8)
     trollop (2.1.2)
     zip-zip (0.3)
       rubyzip (>= 1.0.0)
@@ -35,5 +36,6 @@ DEPENDENCIES
   ruby-oci8
   ruby-progressbar
   rubyzip
+  sqlite3
   trollop
   zip-zip

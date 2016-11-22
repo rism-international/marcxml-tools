@@ -1,0 +1,170 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'yaml'
+require 'nokogiri'
+require 'trollop'
+require 'ruby-progressbar'
+require 'rbconfig'
+require 'zip'
+require 'pry'
+require 'colorize'
+require "sqlite3"
+
+NAMESPACE={'marc' => "http://www.loc.gov/MARC21/slim"}
+SCHEMA_FILE="conf/MARC21slim.xsd"
+#OPTIONS
+opts = Trollop::options do
+  version "RISM Marcxml 0.1 (2016.07)"
+  banner <<-EOS
+This utility program changes MARCXML nodes according to an YAML file. 
+Overall required argument is -i [inputfile].
+
+Usage:
+   marcxml [-cio] [-aftmrsd] [--with-content --with-linked --with-disjunct --zip --with-limit]
+where [options] are:
+  EOS
+
+  opt :infile, "Input-Filename", :type => :strings, :short => "-i"
+  opt :outfile, "Output-Filename", :type => :string, :default => "out.xml", :short => '-o'
+end
+
+Dir['/home/stephan/projects/marcxml-tools/lib/*.rb'].each do |file| 
+  require file 
+end
+
+@db = SQLite3::Database.open "layers.db"
+#=begin
+rows = @db.execute <<-SQL
+  create table IF NOT EXISTS layers (
+      rismnr varchar(100),
+      isn int,
+      layer varchar(100),
+      score varchar(100),
+      umfang varchar(100),
+      format varchar(100)
+  );
+SQL
+#=end
+#
+class Material
+  attr_accessor :rismnr, :layer, :score, :format, :umfang, :isn
+  def initialize(rismnr, layer, score, umfang, format, isn="")
+    @rismnr = rismnr.to_s
+    @layer = layer.to_s
+    @score = score.to_s
+    @format = format.to_s
+    @umfang = umfang.to_s
+    @isn = isn
+  end
+  def attributes
+    instance_variables
+  end
+  def attrs
+    instance_variables.map{|ivar| instance_variable_get ivar}
+  end
+  
+  def compare(m2)
+    result = 0
+    result += 1 if self.score == m2.score && !self.score.empty?
+    result += 2 if self.umfang == m2.umfang && !self.umfang.empty?
+    result += 4 if self.format == m2.format && !self.format.empty?
+    return result
+  end
+
+  def find_best(coll)
+    result = {}
+    coll.each do |m2|
+      result[m2] = self.compare(m2)
+    end
+    result.sort_by {|_key, value| value}.reverse.first.first rescue nil
+  end
+
+  def save(db)
+    db.execute("INSERT INTO layers (rismnr, layer, score, umfang, format, isn) 
+    VALUES (?, ?, ?, ?, ?, ?)", [@rismnr, @layer, @score, @umfang, @format, @isn])
+  end
+end
+
+class Record
+  attr_accessor :rismnr, :layers, :distinct
+  def initialize(rismnr)
+    @rismnr = rismnr
+    @layers = []
+    @distinct = true
+  end
+
+  def distinct_score
+    @distinct = layers.map {|layer| layer.score}.uniq.size == layers.size ? true : false
+  end
+
+  def distinct_size?
+    layers.map {|layer| layer.umfang}.uniq == layers.size
+  end
+end
+
+
+connection = OracleDB.new.connection
+Trollop::die :infile, "must exist" if !opts[:infile]
+Trollop::die :outfile, "must exist" if opts[:report]
+
+if opts[:infile].size == 1
+  source_file = opts[:infile].first
+else
+  source_files = opts[:infile]
+end
+
+ofile=File.open(opts[:outfile], "w")
+
+total = 1076000
+
+bar = ProgressBar.create(title: "Found", :format => "%c of %C Records parsed. -- %a | %B | %p%% %e".yellow, total: total, remainder_mark: '-', progress_mark: '#')
+
+if source_file
+  cnt = 0
+  @db.transaction
+  #Start reading stream
+  xmlstream = Marcxml::Xmlstream.new(ofile)
+  xmlstream.each_record(source_file) do |record|
+    cnt += 1
+    isn=record.xpath("//marc:controlfield[@tag='001']", NAMESPACE).first.content
+    next if isn =~ /^989/ || isn =~ /^0000099/
+    layers = record.xpath("//marc:datafield[@tag='300']", NAMESPACE)
+    next if layers.size == 1
+    records = Record.new(isn)
+    db_result = []
+    layers.each do |layer|
+      links = layer.xpath("marc:subfield[@code='8']", NAMESPACE)
+      links.each do |link|
+        layer = link.content
+        score, umfang = link.xpath("../marc:subfield[@code='a']", NAMESPACE).first.content.split(": ")
+        format = link.xpath("../marc:subfield[@code='c']", NAMESPACE).first.content rescue nil
+        records.layers << Material.new(isn, layer, score, umfang, format)
+      end
+    end
+    records.distinct_score
+    curs = connection.exec("(select s.pr_isn, s.format, h.ah400, h.h02050 from hss001 s inner join hspr01 h on (h.h0001=s.pr_isn) where s.hswkey=(select h0001 from hspr01 where rismnr=:1) and lfdidx=1) union (select s.pr_isn, s.format, h.ah400, h.h02050 from hss001 s inner join hspr01 h on (h.h0001=s.pr_isn) where h.rismnr=:2 and lfdidx=1)", isn, isn)
+    while db = curs.fetch_hash
+      db_result << Material.new(nil, nil, db['AH400'], db['H02050'], db['FORMAT'], db['PR_ISN'])
+    end
+    records.layers.each do |layer|
+      best = layer.find_best(db_result)
+      db_result.reject! {|e| e == best}
+      layer.isn = best.isn if best
+    end
+    records.layers.each do |layer|
+      layer.save(@db)
+    end
+  bar.increment
+  @db.commit if cnt % 1000 == 0
+  @db.transaction if cnt % 1000 == 0
+  end
+@db.commit
+end 
+
+if ofile
+  #ofile.write(result.to_yaml)
+  ofile.close
+  puts "\nCompleted!".green
+else
+  puts source_file + " is not a file!".red
+end
