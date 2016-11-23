@@ -25,39 +25,65 @@ where [options] are:
   EOS
 
   opt :infile, "Input-Filename", :type => :strings, :short => "-i"
-  opt :outfile, "Output-Filename", :type => :string, :default => "out.xml", :short => '-o'
 end
 
 Dir['/home/stephan/projects/marcxml-tools/lib/*.rb'].each do |file| 
   require file 
 end
 
+def convert_593_abbreviation(str)
+  case str
+  when "mw"
+    return "Other"
+  when "mt"
+    return "Treatise, handwritten"
+  when "ml"
+    return "Libretto, handwritten"
+  when "mu"
+    return "Treatise, printed"
+  when "mv"
+    return "unknown"
+  when "mh"
+    return "Autograph manuscript"
+  when "mp"
+    return "Partial autograph"
+  when "ma"
+    return "Manuscript copy"
+  when "m?"
+    return "Possible autograph manuscript"
+  when "mk"
+    return "Libretto, printed"
+  when "md"
+    return "print"
+  when "mz"
+    return "Music periodical"
+  when "4"
+    return "Other"
+  else
+    return str
+  end
+end
+
+
 @db = SQLite3::Database.open "layers.db"
 #=begin
+@db.execute("DROP TABLE layers")
 rows = @db.execute <<-SQL
-  create table IF NOT EXISTS layers (
-      rismnr varchar(100),
-      isn int,
-      layer varchar(100),
-      score varchar(100),
-      umfang varchar(100),
-      format varchar(100)
+  create table layers (
+      _001 text, _isn int, _layer text, _260a text, _260c text, _300a text, _300c text, 
+      _590b text, _592a text, _593a text, _7000 text
   );
 SQL
 #=end
-#
+
 class Material
-  attr_accessor :rismnr, :layer, :score, :format, :umfang, :isn
-  def initialize(rismnr, layer, score, umfang, format, isn="")
-    @rismnr = rismnr.to_s
-    @layer = layer.to_s
-    @score = score.to_s
-    @format = format.to_s
-    @umfang = umfang.to_s
-    @isn = isn
+  attr_accessor :_001, :_isn, :_layer, :_260a, :_260a, :_260c, :_300a, :_300c, :_590b, :_592a, :_593a, :_7000
+  def initialize params = {}
+        params.each { |key, value| send "#{key}=", value  }
   end
+  
   def attributes
-    instance_variables
+    instance_variables.sort
   end
   def attrs
     instance_variables.map{|ivar| instance_variable_get ivar}
@@ -65,9 +91,14 @@ class Material
   
   def compare(m2)
     result = 0
-    result += 1 if self.score == m2.score && !self.score.empty?
-    result += 2 if self.umfang == m2.umfang && !self.umfang.empty?
-    result += 4 if self.format == m2.format && !self.format.empty?
+    result += 1 if self._260a == m2._260a && self._260a
+    result += 1 if self._260c && self._260c.start_with?(m2._260c[0..3])
+    result += 1 if self._300a == m2._300a && self._300a
+    result += 2 if self._300c == m2._300c && self._300c
+    result += 1 if self._590b && self._590b.start_with?(m2._590b) rescue 0
+    result += 1 if self._592a == m2._592a && self._592a
+    result += 1 if self._593a == m2._593a && self._593a
+    result += 1 if self._7000 == m2._7000 && self._7000
     return result
   end
 
@@ -80,28 +111,11 @@ class Material
   end
 
   def save(db)
-    db.execute("INSERT INTO layers (rismnr, layer, score, umfang, format, isn) 
-    VALUES (?, ?, ?, ?, ?, ?)", [@rismnr, @layer, @score, @umfang, @format, @isn])
+    db.execute("INSERT INTO layers (_001, _isn, _layer, _260a, _260c, _300a, _300c, _590b, _592a, _593a, _7000) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+    [self._001, self._isn, self._layer, self._260a, self._260c, self._300a, self._300c, self._590b, self._592a, self._593a, self._7000])
   end
 end
-
-class Record
-  attr_accessor :rismnr, :layers, :distinct
-  def initialize(rismnr)
-    @rismnr = rismnr
-    @layers = []
-    @distinct = true
-  end
-
-  def distinct_score
-    @distinct = layers.map {|layer| layer.score}.uniq.size == layers.size ? true : false
-  end
-
-  def distinct_size?
-    layers.map {|layer| layer.umfang}.uniq == layers.size
-  end
-end
-
 
 connection = OracleDB.new.connection
 Trollop::die :infile, "must exist" if !opts[:infile]
@@ -113,58 +127,75 @@ else
   source_files = opts[:infile]
 end
 
-ofile=File.open(opts[:outfile], "w")
-
-total = 1076000
-
+total = 1077000
 bar = ProgressBar.create(title: "Found", :format => "%c of %C Records parsed. -- %a | %B | %p%% %e".yellow, total: total, remainder_mark: '-', progress_mark: '#')
 
 if source_file
   cnt = 0
   @db.transaction
-  #Start reading stream
-  xmlstream = Marcxml::Xmlstream.new(ofile)
+  xmlstream = Marcxml::Xmlstream.new(nil)
   xmlstream.each_record(source_file) do |record|
     cnt += 1
+    bar.increment
     isn=record.xpath("//marc:controlfield[@tag='001']", NAMESPACE).first.content
     next if isn =~ /^989/ || isn =~ /^0000099/
     layers = record.xpath("//marc:datafield[@tag='300']", NAMESPACE)
-    next if layers.size == 1
-    records = Record.new(isn)
+    #next if layers.size == 1
+    materials = []
     db_result = []
     layers.each do |layer|
+      f = %w(_001 _isn _layer _260a _260c _300a _300c _590b _592a _593a _7000)
       links = layer.xpath("marc:subfield[@code='8']", NAMESPACE)
       links.each do |link|
         layer = link.content
-        score, umfang = link.xpath("../marc:subfield[@code='a']", NAMESPACE).first.content.split(": ")
-        format = link.xpath("../marc:subfield[@code='c']", NAMESPACE).first.content rescue nil
-        records.layers << Material.new(isn, layer, score, umfang, format)
+        layer_nodes = record.xpath("//marc:subfield[@code='8'][text()=#{layer}]", NAMESPACE)
+        fields = {_001: isn, _layer: layer}
+        layer_nodes.each do |node|
+          tag = node.parent.attr("tag")
+          node.xpath("../marc:subfield", NAMESPACE).each do |subfield|
+            next if subfield.attr("code") == "8"
+            tag = "_#{subfield.parent.attr("tag")}#{subfield.attr('code')}"
+            if f.include?(tag) && !fields[tag]
+              fields[tag] = subfield.content
+            end
+          end
+          if fields['_300a'] =~ /: /
+            score, umfang = fields['_300a'].split(": ")
+            fields['_300a'] = score
+            fields['_590b'] = umfang
+          end
+        end
+        materials << Material.new(fields)
       end
     end
-    records.distinct_score
-    curs = connection.exec("(select s.pr_isn, s.format, h.ah400, h.h02050 from hss001 s inner join hspr01 h on (h.h0001=s.pr_isn) where s.hswkey=(select h0001 from hspr01 where rismnr=:1) and lfdidx=1) union (select s.pr_isn, s.format, h.ah400, h.h02050 from hss001 s inner join hspr01 h on (h.h0001=s.pr_isn) where h.rismnr=:2 and lfdidx=1)", isn, isn)
+    
+    curs = connection.exec(
+      
+      "(select s.pr_isn, s.format, h.h02035||'-'||h.h02040 datum, hs.pea100, s.wasser, s.umfang, h.h00141, h.ah400, h.h02050 from hss001 s inner join hspr01 h on (h.h0001=s.pr_isn) inner join hss101 hs on (hs.pr_isn=s.pr_isn) where s.hswkey=(select h0001 from hspr01 where rismnr=:1) and s.lfdidx=1 and hs.lfdidx=1) union (select s.pr_isn, s.format, h.h02035||'-'||h.h02040 datum, hs.pea100, s.wasser, s.umfang, h.h00141, h.ah400, h.h02050 from hss001 s inner join hspr01 h on (h.h0001=s.pr_isn) inner join hss101 hs on (s.pr_isn=hs.pr_isn) where h.rismnr=:2 and s.lfdidx=1 and hs.lfdidx=1)", isn, isn)
+
+    
     while db = curs.fetch_hash
-      db_result << Material.new(nil, nil, db['AH400'], db['H02050'], db['FORMAT'], db['PR_ISN'])
+      if db['UMFANG']
+        umfang = db['UMFANG']
+      else
+        umfang = db['H02050']
+      end
+      db_result << Material.new(_300a: db['AH400'], _590b: umfang, _300c: db['FORMAT'], 
+                                _isn: db['PR_ISN'], _593a: convert_593_abbreviation(db['H00141']), _260c: db['DATUM'].gsub(/0000/, ''),
+                                _592a: db['WASSER'], _7000: db['PEA100'].to_s)
     end
-    records.layers.each do |layer|
+    materials.each do |layer|
       best = layer.find_best(db_result)
       db_result.reject! {|e| e == best}
-      layer.isn = best.isn if best
+      layer._isn = best._isn if best
     end
-    records.layers.each do |layer|
+    materials.each do |layer|
       layer.save(@db)
     end
-  bar.increment
   @db.commit if cnt % 1000 == 0
   @db.transaction if cnt % 1000 == 0
   end
 @db.commit
 end 
 
-if ofile
-  #ofile.write(result.to_yaml)
-  ofile.close
-  puts "\nCompleted!".green
-else
-  puts source_file + " is not a file!".red
-end
+puts "\nCompleted!".green
