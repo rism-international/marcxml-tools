@@ -1,0 +1,241 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'yaml'
+require 'nokogiri'
+require 'trollop'
+require 'ruby-progressbar'
+require 'rbconfig'
+require 'zip'
+require 'pry'
+require 'colorize'
+require 'active_record'
+require 'activerecord-import'
+require 'sqlite3'
+
+NAMESPACE={'marc' => "http://www.loc.gov/MARC21/slim"}
+SCHEMA_FILE="conf/MARC21slim.xsd"
+#OPTIONS
+opts = Trollop::options do
+  version "RISM Marcxml 0.1 (2016.07)"
+  banner <<-EOS
+This utility program changes MARCXML nodes according to an YAML file. 
+Overall required argument is -i [inputfile].
+
+Usage:
+   marcxml [-cio] [-aftmrsd] [--with-content --with-linked --with-disjunct --zip --with-limit]
+where [options] are:
+  EOS
+
+  opt :infile, "Input-Filename", :type => :strings, :short => "-i"
+end
+
+Dir['/home/stephan/projects/marcxml-tools/lib/*.rb'].each do |file| 
+  require file 
+end
+connection = OracleDB.new.connection
+Trollop::die :infile, "must exist" if !opts[:infile]
+if opts[:infile].size == 1
+  source_file = opts[:infile].first
+else
+  source_files = opts[:infile]
+end
+total = 1077000
+bar = ProgressBar.create(title: "Found", :format => "%c of %C Records parsed. -- %a | %B | %p%% %e".yellow, total: total, remainder_mark: '-', progress_mark: '#')
+
+def convert_593_abbreviation(str)
+  case str
+  when "mw"
+    return "Other"
+  when "mt"
+    return "Treatise, handwritten"
+  when "ml"
+    return "Libretto, handwritten"
+  when "mu"
+    return "Treatise, printed"
+  when "mv"
+    return "unknown"
+  when "mh"
+    return "Autograph manuscript"
+  when "mp"
+    return "Partial autograph"
+  when "ma"
+    return "Manuscript copy"
+  when "m?"
+    return "Possible autograph manuscript"
+  when "mk"
+    return "Libretto, printed"
+  when "md"
+    return "print"
+  when "mz"
+    return "Music periodical"
+  when "4"
+    return "Other"
+  else
+    return str
+  end
+end
+
+ActiveRecord::Base.establish_connection(
+    adapter: 'sqlite3',
+    database: 'materials.db'
+)
+=begin
+ActiveRecord::Schema.define do
+    create_table :materials, force: true do |t|
+      t.string :_001
+      t.integer :isn
+      t.string :layer
+      t.string :_260a
+      t.string :_260c
+      t.string :_300a
+      t.string :_300c
+      t.text :_500a
+      t.string :_590a
+      t.string :_590b
+      t.string :_592a
+      t.string :_593a
+      t.string :_7000
+      t.string :similarity
+      t.string :difference
+    end
+end
+=end
+class Material < ActiveRecord::Base
+  def size
+    self.attributes.map{|e, v| v }.compact.size - 2
+  end
+
+  def compare(m2)
+    blist = %w(454002500)
+    result = 0
+    result += 2 if self._260a == m2._260a && self._260a
+    result += 2 if self._260c == m2._260c && self._260c
+    result += 2 if self._300a == m2._300a && self._300a
+    result += 2 if self._300c == m2._300c && self._300c
+    
+    if self._500a
+      db_text = m2._500a ? m2._500a : ""
+      if self._500a == db_text
+        result += 2
+      elsif self._500a.start_with?(db_text)
+        result += 1
+      end
+    end
+    if self._590a
+      db_text = m2._590a ? m2._590a : ""
+      if self._590a == db_text
+        result += 2
+      elsif self._590a.start_with?(db_text)
+        result += 1
+      end
+    end
+    if self._590b
+      db_text = m2._590b ? m2._590b : ""
+      if self._590b == db_text
+        result += 2
+      elsif self._590b.start_with?(db_text)
+        result += 1
+      end
+    end
+    result += 2 if self._592a == m2._592a && self._592a
+    result += 2 if self._593a == m2._593a && self._593a
+    result += 2 if self._7000 == m2._7000 && self._7000
+    binding.pry if blist.include?(self._001)
+    return result
+  end
+
+  def find_best(coll)
+    result = {}
+    coll.each do |m2|
+      result[m2] = self.compare(m2)
+    end
+    rating_list = result.sort_by {|_key, value| value}.reverse
+    self.difference = rating_list.size == 1 ? -1 : rating_list.first[1] - rating_list[1][1] rescue 99
+    self.similarity = rating_list.first[1] rescue -1
+    rating_list.first.first rescue nil
+  end
+end
+
+result = []
+if source_file
+  xmlstream = Marcxml::Xmlstream.new(nil)
+  xmlstream.each_record(source_file) do |record|
+    bar.increment
+    isn=record.xpath("//marc:controlfield[@tag='001']", NAMESPACE).first.content
+    next if isn =~ /^989/ || isn =~ /^0000099/
+    #layers = record.xpath("//marc:datafield[@tag='300']", NAMESPACE)
+    ln = record.xpath("//marc:subfield[@code='8']", NAMESPACE)
+    s8 = {}
+    ln.each do |l| 
+      s8[l.content] = l.parent
+    end
+    binding.pry
+    #next if layers.size == 1
+    materials = []
+    db_result = []
+    s8.values.each do |layer|
+      f = %w(_001 _isn _layer _260a _260c _300a _300c _500a _590a _590b _592a _593a _7000)
+      links = layer.xpath("marc:subfield[@code='8']", NAMESPACE)
+      links.each do |link|
+        layer = link.content
+        layer_nodes = record.xpath("//marc:subfield[@code='8'][text()=#{layer}]", NAMESPACE)
+        fields = {_001: isn, layer: layer}
+        layer_nodes.each do |node|
+          tag = node.parent.attr("tag")
+          node.xpath("../marc:subfield", NAMESPACE).each do |subfield|
+            next if subfield.attr("code") == "8"
+            tag = "_#{subfield.parent.attr("tag")}#{subfield.attr('code')}"
+            if f.include?(tag) && !fields[tag]
+              fields[tag] = subfield.content
+            end
+          end
+          if fields['_300a'] =~ /: /
+            score, umfang = fields['_300a'].split(": ")
+            fields['_300a'] = score
+            fields['_590b'] = umfang
+          end
+        end
+        materials << Material.new(fields)
+      end
+    end
+    
+    curs = connection.exec(
+      "(select s.pr_isn, h.bemphy, x.text, x.swvf, z.pb814, s.format, h.h02035||NVL2(h.h02040, '-'||h.h02040, '') datum, hs.pea100, s.wasser, s.besets, s.umfang, h.h00141, h.ah400, h.h02050 from hss001 s inner join hspr01 h on (h.h0001=s.pr_isn) left join ss_datext z on (z.pr_isn=s.pr_isn) inner join hss101 hs on (hs.pr_isn=s.pr_isn) left join ss_bemueb2 x on (x.pr_isn=s.pr_isn) where s.hswkey=(select h0001 from hspr01 where rismnr=:1) and s.lfdidx=1 and hs.lfdidx=1) union (select s.pr_isn, h.bemphy, x.text, x.swvf, z.pb814, s.format, h.h02035||NVL2(h.h02040, '-'||h.h02040, '') datum, hs.pea100, s.wasser, s.besets, s.umfang, h.h00141, h.ah400, h.h02050 from hss001 s inner join hspr01 h on (h.h0001=s.pr_isn) left join ss_datext z on (z.pr_isn=s.pr_isn) inner join hss101 hs on (s.pr_isn=hs.pr_isn) left join ss_bemueb2 x on (x.pr_isn=s.pr_isn) where h.rismnr=:2 and s.lfdidx=1 and hs.lfdidx=1)", isn, isn)
+    
+    while db = curs.fetch_hash
+      umfang = db['UMFANG'] ? db['UMFANG'] : db['H02050']
+      text = db['BEMPHY'] ? db['BEMPHY'] : db['TEXT']
+      datum  = db['PB814'] ? "#{db['DATUM']} (#{db['PB814']})" : db['DATUM']
+
+      db_result << Material.new(_300a: db['AH400'].to_s.force_encoding("UTF-8"), 
+                                _590b: umfang.to_s.force_encoding("UTF-8"), 
+                                _300c: db['FORMAT'].to_s.force_encoding("UTF-8"), 
+                                isn: db['PR_ISN'], 
+                                _593a: convert_593_abbreviation(db['H00141']).to_s.force_encoding("UTF-8"), 
+                                _260c: datum.to_s.force_encoding("UTF-8").gsub(/0000/, ''),
+                                _592a: db['WASSER'].to_s.force_encoding("UTF-8"), 
+                                _7000: db['PEA100'].to_s.force_encoding("UTF-8"), 
+                                _590a: db['BESETS'].to_s.force_encoding("UTF-8"), 
+                                _500a: text.to_s.force_encoding("UTF-8").strip, 
+                                _260a: db['SWVF'].to_s.force_encoding("UTF-8"))
+    end
+    materials.sort_by{|m| m.size}.reverse.each do |layer|
+      best = layer.find_best(db_result)
+      #result << db_result.delete(best)
+      db_result.delete(best)
+      #db_result.reject! {|e| e == best}
+      layer.isn = best.isn if best
+    end
+    materials.each do |layer|
+      result << layer
+    end
+    
+    if result.size % 1000 == 0
+      Material.import result
+      result = []
+    end
+  end
+end 
+Material.import result
+
+puts "\nCompleted!".green

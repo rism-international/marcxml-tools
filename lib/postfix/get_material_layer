@@ -9,7 +9,7 @@ require 'zip'
 require 'pry'
 require 'colorize'
 require "sqlite3"
-
+#require 'activerecord'
 NAMESPACE={'marc' => "http://www.loc.gov/MARC21/slim"}
 SCHEMA_FILE="conf/MARC21slim.xsd"
 #OPTIONS
@@ -71,13 +71,13 @@ end
 rows = @db.execute <<-SQL
   create table layers (
       _001 text, _isn int, _layer text, _260a text, _260c text, _300a text, _300c text, 
-      _590b text, _592a text, _593a text, _7000 text
+      _590b text, _592a text, _593a text, _7000 text, _similarity int, _difference int
   );
 SQL
 #=end
 
 class Material
-  attr_accessor :_001, :_isn, :_layer, :_260a, :_260a, :_260c, :_300a, :_300c, :_590b, :_592a, :_593a, :_7000
+  attr_accessor :_001, :_isn, :_layer, :_260a, :_260a, :_260c, :_300a, :_300c, :_590b, :_592a, :_593a, :_7000, :_similarity, :_difference
   def initialize params = {}
         params.each { |key, value| send "#{key}=", value  }
   end
@@ -107,13 +107,17 @@ class Material
     coll.each do |m2|
       result[m2] = self.compare(m2)
     end
-    result.sort_by {|_key, value| value}.reverse.first.first rescue nil
+    rating_list = result.sort_by {|_key, value| value}.reverse
+
+    self._difference = rating_list.size == 1 ? -1 : rating_list.first[1] - rating_list[1][1] rescue 99
+    self._similarity = rating_list.first[1] rescue -1
+    rating_list.first.first rescue nil
   end
 
   def save(db)
-    db.execute("INSERT INTO layers (_001, _isn, _layer, _260a, _260c, _300a, _300c, _590b, _592a, _593a, _7000) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-    [self._001, self._isn, self._layer, self._260a, self._260c, self._300a, self._300c, self._590b, self._592a, self._593a, self._7000])
+    db.execute("INSERT INTO layers (_001, _isn, _layer, _260a, _260c, _300a, _300c, _590b, _592a, _593a, _7000, _difference, _similarity)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+    [self._001, self._isn, self._layer, self._260a, self._260c, self._300a, self._300c, self._590b, self._592a, self._593a, self._7000, self._difference, self._similarity])
   end
 end
 
@@ -188,6 +192,7 @@ if source_file
       best = layer.find_best(db_result)
       db_result.reject! {|e| e == best}
       layer._isn = best._isn if best
+      binding.pry
     end
     materials.each do |layer|
       layer.save(@db)
