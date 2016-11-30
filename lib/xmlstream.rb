@@ -18,7 +18,7 @@ module Marcxml
     def each_record(filename, &block)
       File.open(filename) do |file|
         Nokogiri::XML::Reader.from_io(file).each do |node|
-          if node.name == 'record' and node.node_type == Nokogiri::XML::Reader::TYPE_ELEMENT
+          if node.name == 'record' || node.name == 'marc:record' and node.node_type == Nokogiri::XML::Reader::TYPE_ELEMENT
             yield(Nokogiri::XML(node.outer_xml, nil, "UTF-8"))
           end
         end
@@ -33,6 +33,7 @@ module Marcxml
     def append(record, nodes)
       nodes.sort_by{|node| [node.attr("tag"), nodes.index(node)]}.each{|node| 
         record.root.add_child(node)}
+      #TODO Switch line break
       record_string = record.to_s.gsub("&lt;br&gt;", "{{brk}}")
         .gsub("Îş", "α")
         .gsub("Îż", "ω")

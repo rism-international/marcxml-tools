@@ -8,16 +8,16 @@ DATE=`date +%Y%m%d`
 #tar -xzvf input/muscat3_export.tar.gz -C input
 
 echo "Sources"
-ruby marcxml --transform -i input/rism_sources.xml -c conf/export_sources.yaml -o export/BSB/rism_sources.xml --muscat
-ruby marcxml --analyze -i export/BSB/rism_sources.xml -o export/BSB/sources_analyze.txt --with-content
+ruby marcxml --transform -i /tmp/sources.xml -c conf/opac_sources.yaml -o export/opac/rism_sources.xml
+ruby marcxml --analyze -i export/opac/rism_sources.xml -o export/opac/sources_analyze.txt --with-content
 
 #echo "People"
-#ruby marcxml --transform -i input/rism_pe.xml -c conf/transform_person.yaml -o export/muscat/people.xml --muscat
-#ruby marcxml --analyze -i export/muscat/people.xml -o export/muscat/people_analyze.txt --with-content
+#ruby marcxml --transform -i /tmp/people.xml -c conf/opac_person.yaml -o export/opac/rism_pe.xml
+#ruby marcxml --analyze -i export/opac/rism_pe.xml -o export/opac/people_analyze.txt --with-content
 
 #echo "Catalogue"
-#ruby marcxml --transform -i input/rism_lit.xml -c conf/transform_catalogue.yaml -o export/muscat/catalogue.xml --muscat
-#ruby marcxml --analyze -i export/muscat/catalogue.xml -o export/muscat/catalogue_analyze.txt --with-content
+#ruby marcxml --transform -i /tmp/catalogues.xml -c conf/opac_catalogue.yaml -o export/opac/rism_lit.xml
+#ruby marcxml --analyze -i export/opac/rism_lit.xml -o export/opac/catalogue_analyze.txt --with-content
 
 #echo "Institutions"
 #ruby marcxml --transform -i input/rism_ks.xml -c conf/transform_institutions.yaml -o export/muscat/institutions.xml --muscat

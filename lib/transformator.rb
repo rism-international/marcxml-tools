@@ -39,6 +39,26 @@ module Marcxml
       nodes
     end
 
+    def move_subfield_to_datafield(from_tag, tag)
+      ftag=from_tag.split("$")[0]
+      fcode=from_tag.split("$")[1]
+      ttag=tag.split("$")[0]
+      tcode=tag.split("$")[1]
+      sources=node.xpath("//marc:datafield[@tag='#{ftag}']/marc:subfield[@code='#{fcode}']", NAMESPACE)
+      sources.each do |s| 
+        target = Nokogiri::XML::Node.new "datafield", node
+        target['tag'] = ttag
+        target['ind1'] = ' '
+        target['ind2'] = ' '
+        sf = Nokogiri::XML::Node.new "subfield", node
+        sf['code'] = tcode
+        sf.content = s.content
+        target << sf
+        node.root << target
+        s.remove
+      end
+    end
+
     def move_subfield_to_tag(from_tag, tag)
       ftag=from_tag.split("$")[0]
       fcode=from_tag.split("$")[1]
@@ -135,6 +155,8 @@ module Marcxml
            # Move subfield
           elsif k.is_tag_with_subfield? && v.is_tag?
              move_subfield_to_tag(k, v)
+          elsif k.is_tag_with_subfield? && v.is_tag_with_subfield?
+              move_subfield_to_datafield(k, v)
           end
         end
       end

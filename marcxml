@@ -84,6 +84,9 @@ Dir[File.dirname(__FILE__) + '/lib/import_classes/*.rb'].each do |file|
   require file 
 end
 
+Dir[File.dirname(__FILE__) + '/lib/opac/*.rb'].each do |file| 
+  require file 
+end
 
 if opts[:muscat]
   if !ENV['ORACLE_HOST']
@@ -218,13 +221,13 @@ if (source_file && File.exists?(source_file)) || source_files
   xmlstream = Marcxml::Xmlstream.new(ofile)
   xmlstream.header unless (opts[:analyze] || opts[:report])
   xmlstream.each_record(source_file) do |record|
-
     if opts[:transform]
       tr = transform_class.new(record)
-      #tr.execute_all
-      if opts[:muscat]
-        tr.execute_all
-      end
+      tr.execute_all
+      #FIXME Why only with muscat classes?
+      #if opts[:muscat]
+      #  tr.execute_all
+      #end
       if tr.namespace
         nodes = record.xpath("//marc:datafield", NAMESPACE).remove
         xmlstream.append(record, nodes)
