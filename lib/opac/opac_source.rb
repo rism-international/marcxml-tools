@@ -20,6 +20,8 @@ module Marcxml
       # :map, :move_852c, :move_490]
 
       @methods = [:change_material, :change_collection, :change_attribution, :prefix_performance,
+                  :join_730, :change_243, :change_593_abbreviation,
+                  :rename_digitalisat,
                   :map]
     end
 
@@ -185,13 +187,13 @@ module Marcxml
     end
 
     def change_243
-      tags=node.xpath("//marc:datafield[@tag='243']", NAMESPACE)
-      tags.each do |sf|
-        sfa = Nokogiri::XML::Node.new "subfield", node
-        sfa['code'] = 'g'
-        sfa.content = "RAK"
-        sf << sfa
-        tags.attr("tag", "730")
+      tags=node.xpath("//marc:datafield[@tag='730']", NAMESPACE)
+      tags.each do |tag|
+        ruling = tag.xpath("marc:subfield[@code='g']", NAMESPACE).first
+        if ruling && ruling.content == 'RAK'
+          tag["tag"] = "243"
+          binding.pry
+        end
       end
     end
 
@@ -207,35 +209,6 @@ module Marcxml
           n << sf2
         end
       end
-# This section is disabled by request
-=begin
-      subfields=node.xpath("//marc:datafield[@tag='500']/marc:subfield[@code='a']", NAMESPACE)
-      subfields.each do |sf|
-        if sf.content.ends_with_url?
-          if sf.content =~ /dl.rism.info/
-            rism_id = node.xpath("//marc:controlfield[@tag='001']", NAMESPACE).first.content
-            logger.debug("DROPPED MULTIMEDIA LINK in #{rism_id}: #{sf.parent.to_s}")
-            sf.parent.remove
-          else
-            urlbem = sf.content.split(": ")[0..-2].join(": ")
-            url = sf.content.split(": ")[-1]
-            tag_856 = Nokogiri::XML::Node.new "datafield", node
-            tag_856['tag'] = '856'
-            tag_856['ind1'] = '0'
-            tag_856['ind2'] = ' '
-            sfa = Nokogiri::XML::Node.new "subfield", node
-            sfa['code'] = 'u'
-            sfa.content = url.gsub(/\.$/, "")
-            sf2 = Nokogiri::XML::Node.new "subfield", node
-            sf2['code'] = 'z'
-            sf2.content = urlbem
-            tag_856 << sfa << sf2
-            node.root << tag_856
-            sf.parent.remove
-          end
-        end
-      end
-=end
     end
 
     def prefix_performance
@@ -244,29 +217,24 @@ module Marcxml
     end
 
 
-    def split_730
+    def join_730
       datafields = node.xpath("//marc:datafield[@tag='730']", NAMESPACE)
       return 0 if datafields.empty?
       datafields.each do |datafield|
-        hs = datafield.xpath("marc:subfield[@code='a']", NAMESPACE)
-        title = split_hs(hs.map(&:text).join(""))
-        hs.each { |sf| sf.content = title[:hs] }
-        sfk = Nokogiri::XML::Node.new "subfield", node
-        sfk['code'] = 'g'
-        sfk.content = "RISM"
-        datafield << sfk
-        if title[:sub]
-          sfk = Nokogiri::XML::Node.new "subfield", node
-          sfk['code'] = 'k'
-          sfk.content = title[:sub]
-          datafield << sfk
+        sub = ""
+        arr = ""
+        hs = datafield.xpath("marc:subfield[@code='a']", NAMESPACE).first
+        node_sub = datafield.xpath("marc:subfield[@code='k']", NAMESPACE).first
+        node_arr = datafield.xpath("marc:subfield[@code='o']", NAMESPACE).first
+        if node_sub
+          sub = ". " + node_sub.content
+          node_sub.remove
         end
-        if title[:arr]
-          sfk = Nokogiri::XML::Node.new "subfield", node
-          sfk['code'] = 'o'
-          sfk.content = title[:arr]
-          datafield << sfk
+        if node_arr
+          arr = ". " + node_arr.content
+          node_arr.remove
         end
+        hs.content = hs.content + sub + arr
       end
     end
 
@@ -325,11 +293,11 @@ module Marcxml
       subfields = node.xpath("//marc:datafield[@tag='856']/marc:subfield[@code='z']", NAMESPACE)
       return 0 if subfields.empty?
       subfields.each do |subfield|
-        if subfield.content =~ /^Digitalisat/
-          if subfield.content == 'Digitalisat'
-            subfield.content = "[digitized version]"
+        if subfield.content =~ /^\[digitized version\]/
+          if subfield.content == '[digitized version]'
+            subfield.content = "[DIGITALISAT]"
           else
-            subfield.content = "[digitized version] #{subfield.content}"
+            subfield.content = "[DIGITALISAT] #{subfield.content}"
           end
         end
       end
@@ -475,30 +443,14 @@ module Marcxml
 
     def convert_593_abbreviation(str)
       case str
-      when "mw"
-        return "Other"
-      when "mt"
-        return "Treatise, handwritten"
-      when "ml"
-        return "Libretto, handwritten"
-      when "mu"
-        return "Treatise, printed"
-      when "mv"
-        return "unknown"
-      when "autograph"
-        return "Autograph manuscript"
-      when "partly autograph"
-        return "Partial autograph"
-      when "manuscript"
-        return "Manuscript copy"
-      when "probably autograph"
-        return "Possible autograph manuscript"
-      when "mk"
-        return "Libretto, printed"
-      when "mz"
-        return "Music periodical"
-      when "4"
-        return "Other"
+      when "Autograph manuscript"
+        return "autograph"
+      when "Partial autograph"
+        return "partly autograph"
+      when "Manuscript copy"
+        return "manuscript"
+      when "Possible autograph manuscript"
+        return "probably autograph"
       else
         return str
       end
