@@ -8,7 +8,7 @@ DATE=`date +%Y%m%d`
 #tar -xzvf input/muscat3_export.tar.gz -C input
 
 echo "Sources"
-ruby marcxml --transform -i /tmp/sources.xml -c conf/opac_sources.yaml -o export/opac/rism_sources.xml
+#ruby marcxml --transform -i /tmp/sources.xml -c conf/opac_sources.yaml -o export/opac/rism_sources.xml
 ruby marcxml --analyze -i export/opac/rism_sources.xml -o export/opac/sources_analyze.txt --with-content
 
 #echo "People"
