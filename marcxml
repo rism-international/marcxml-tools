@@ -215,13 +215,18 @@ if (source_file && File.exists?(source_file)) || source_files
     puts "Finished.".green
     exit
   end
-
+  
+  non_opac = File.exist?("lib/opac/non_opac.yml") ? YAML.load_file("lib/opac/non_opac.yml") : []
 
   #Start reading stream
   xmlstream = Marcxml::Xmlstream.new(ofile)
   xmlstream.header unless (opts[:analyze] || opts[:report])
   xmlstream.each_record(source_file) do |record|
     if opts[:transform]
+      isn = record.xpath('//marc:controlfield[@tag="001"]', NAMESPACE)[0].content rescue next
+      if non_opac.include?(isn)
+        next
+      end
       tr = transform_class.new(record)
       tr.execute_all
       #FIXME Why only with muscat classes?
@@ -254,7 +259,11 @@ if (source_file && File.exists?(source_file)) || source_files
     #break if start==100
 
     elsif opts[:analyze]
-      isn = record.xpath('//marc:controlfield[@tag="001"]', NAMESPACE)[0].content.to_i
+      begin
+        isn = record.xpath('//marc:controlfield[@tag="001"]', NAMESPACE)[0].content.to_i
+      rescue
+        binding.pry
+      end
       resdict['*MAX'] = isn if isn > resdict['*MAX']
       record.xpath('//marc:controlfield', NAMESPACE).each do |node|
         resdict[node["tag"]]+=1

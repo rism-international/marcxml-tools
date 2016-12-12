@@ -192,7 +192,6 @@ module Marcxml
         ruling = tag.xpath("marc:subfield[@code='g']", NAMESPACE).first
         if ruling && ruling.content == 'RAK'
           tag["tag"] = "243"
-          binding.pry
         end
       end
     end

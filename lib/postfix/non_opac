@@ -1,0 +1,48 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'yaml'
+require 'nokogiri'
+require 'trollop'
+require 'ruby-progressbar'
+require 'rbconfig'
+require 'zip'
+require 'pry'
+require 'colorize'
+
+#OPTIONS
+opts = Trollop::options do
+  version "RISM Marcxml 0.1 (2016.07)"
+  banner <<-EOS
+This utility program changes MARCXML nodes according to an YAML file. 
+Overall required argument is -i [inputfile].
+
+Usage:
+   marcxml [-cio] [-aftmrsd] [--with-content --with-linked --with-disjunct --zip --with-limit]
+where [options] are:
+  EOS
+
+  opt :outfile, "Output-Filename", :type => :string, :default => "out.xml", :short => '-o'
+end
+
+Dir['/home/dev/projects/marcxml-tools/lib/*.rb'].each do |file| 
+  require file 
+end
+
+connection = OracleDB.new.connection
+Trollop::die :outfile, "must exist" if opts[:report]
+
+ofile=File.open(opts[:outfile], "w")
+
+result = []
+curs = connection.exec("select rismnr from hspr01 where opac is NULL and rismnr is not NULL and rismnr not like 'H%' and rismnr not like 'B%'")
+while db = curs.fetch_hash
+  result << db['RISMNR'].to_s
+end
+
+if ofile
+  ofile.write(result.sort.to_yaml)
+  ofile.close
+  puts "\nCompleted!".green
+else
+  puts source_file + " is not a file!".red
+end

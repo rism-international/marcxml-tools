@@ -31,8 +31,12 @@ module Marcxml
     # lt and gt arr replaced, but HTML-entities should be erased completly 
     # 
     def append(record, nodes)
-      nodes.sort_by{|node| [node.attr("tag"), nodes.index(node)]}.each{|node| 
-        record.root.add_child(node)}
+      begin
+         nodes.sort_by{|node| [node.attr("tag"), nodes.index(node)]}.each{|node| 
+           record.root.add_child(node)}
+      rescue
+        binding.pry
+      end
       #TODO Switch line break
       record_string = record.to_s.gsub("&lt;br&gt;", "{{brk}}")
         .gsub("Îş", "α")
