@@ -20,8 +20,9 @@ module Marcxml
       # :map, :move_852c, :move_490]
 
       @methods = [:change_material, :change_collection, :change_attribution, :prefix_performance,
-                  :join_730, :change_243, :change_593_abbreviation,
-                  :rename_digitalisat,
+                  :join_730, :change_243, :change_593_abbreviation, :change_scoring,
+                  :join_031t, :rename_digitalisat, :move_590b, :change_700_relator, :move_490,
+                  :move_772_with_b1, :copy_690_to_240n,
                   :map]
     end
 
@@ -103,6 +104,22 @@ module Marcxml
       end
     end
 
+    def move_772_with_b1
+      isn = node.xpath("//marc:controlfield[@tag='001']", NAMESPACE).first.content rescue "0"
+      if isn.start_with?("00000993")
+        d100 = node.xpath("//marc:datafield[@tag='100']/marc:subfield[@code='a']", NAMESPACE).first.content rescue ""
+        if d100 == 'Collection'
+          rename_datafield('774', '772')
+        end
+      else
+        links_to_collection = node.xpath("//marc:datafield[@tag='773']/marc:subfield[@code='w']", NAMESPACE)
+        links_to_collection.each do |link|
+          link.content = "%09d" % link.content.to_i
+          link.attributes["code"].value = "a"
+        end
+      end
+    end
+
     def delete_anonymus
       subfield=node.xpath("//marc:datafield[@tag='100']/marc:subfield[@code='a']", NAMESPACE)
       if subfield.text=='Anonymus'
@@ -121,28 +138,10 @@ module Marcxml
     end
 
     def change_scoring
-      scoring = node.xpath("//marc:datafield[@tag='594']/marc:subfield[@code='a']", NAMESPACE)
+      scoring = node.xpath("//marc:datafield[@tag='594']/marc:subfield[@code='b']", NAMESPACE)
       scoring.each do |tag|
-        entries = tag.content.split(/,(?=\s\D)/)
-        entries.each do |entry|
-          instr = entry.split("(").first
-          amount = entry.gsub(/.+\((\w+)\)/, '\1')
-          tag = Nokogiri::XML::Node.new "datafield", node
-          tag['tag'] = '594'
-          tag['ind1'] = ' '
-          tag['ind2'] = ' '
-          sfa = Nokogiri::XML::Node.new "subfield", node
-          sfa['code'] = 'b'
-          sfa.content = instr.strip
-          sf2 = Nokogiri::XML::Node.new "subfield", node
-          sf2['code'] = 'c'
-          sf2.content = amount==instr ? 1 : amount
-          tag << sfa << sf2
-          node.root << tag
-        end
+        tag.parent.remove
       end
-      #rnode = node.xpath("//marc:datafield[@tag='594']", NAMESPACE).first
-      #rnode.remove if rnode
     end
 
     def change_attribution
@@ -237,20 +236,16 @@ module Marcxml
       end
     end
 
-    def split_031t
+    def join_031t
       datafields = node.xpath("//marc:datafield[@tag='031']", NAMESPACE)
       return 0 if datafields.empty?
       datafields.each do |datafield|
-        txt = datafield.xpath("marc:subfield[@code='t']", NAMESPACE)[0]
-        next if !txt || !txt.content.include?(";")
-        texts = txt.content.split(";")
-        texts.each do |t|
-          sfk = Nokogiri::XML::Node.new "subfield", node
-          sfk['code'] = 't'
-          sfk.content = t.strip
-          datafield << sfk
+        texts = datafield.xpath("marc:subfield[@code='t']", NAMESPACE)
+        next if texts.size <= 1
+        texts[1..-1].each do |t|
+          texts[0].content += "; #{t.content}"
+          t.remove
         end
-        txt.remove
       end
     end
 
@@ -294,9 +289,9 @@ module Marcxml
       subfields.each do |subfield|
         if subfield.content =~ /^\[digitized version\]/
           if subfield.content == '[digitized version]'
-            subfield.content = "[DIGITALISAT]"
+            subfield.content = "Digitalisat"
           else
-            subfield.content = "[DIGITALISAT] #{subfield.content}"
+            subfield.content = "Digitalisat #{subfield.content}"
           end
         end
       end
@@ -349,32 +344,41 @@ module Marcxml
       end
     end
 
-    def move_490
-      series = node.xpath("//marc:datafield[@tag='490']", NAMESPACE)[0]
-      series_entry = node.xpath("//marc:datafield[@tag='490']/marc:subfield[@code='a']", NAMESPACE)[0]
-      location_entry = node.xpath("//marc:datafield[@tag='035']/marc:subfield[@code='a']", NAMESPACE)[0]
-      existent_510 = node.xpath("//marc:datafield[@tag='510']", NAMESPACE)[0]
-      return 0 unless series_entry
-      if existent_510
-        series.remove
-      else
-        tag = Nokogiri::XML::Node.new "datafield", node
-        tag['tag'] = '510'
-        tag['ind1'] = ' '
-        tag['ind2'] = ' '
-        sfa = Nokogiri::XML::Node.new "subfield", node
-        sfa['code'] = 'a'
-        sfa.content = "RISM " + series_entry.content
-        tag << sfa
-        if location_entry
-          sfc = Nokogiri::XML::Node.new "subfield", node
-          sfc['code'] = 'c'
-          sfc.content = location_entry.content
-          tag << sfc
-        end
-        node.root << tag
-        series.remove
+    def copy_690_to_240n
+      node_240n = node.xpath("//marc:datafield[@tag='240']/marc:subfield[@code='n']", NAMESPACE)
+      node_240 = node.xpath("//marc:datafield[@tag='240']", NAMESPACE).first
+      nodes_690 = node.xpath("//marc:datafield[@tag='690']", NAMESPACE)
+      if nodes_690.empty?
+        return 0
       end
+      node_240n_content = node_240n.map { |n| n.content }
+      nodes_690.each do |node|
+        wv = node.xpath("marc:subfield[@code='a']", NAMESPACE).first.content rescue ""
+        no = node.xpath("marc:subfield[@code='n']", NAMESPACE).first.content rescue ""
+        content = "#{wv} #{no}"
+        binding.pry
+        unless node_240n_content.include?(content)
+          sfn = Nokogiri::XML::Node.new "marc:subfield", node
+          sfn['code'] = 'n'
+          sfn.content = content
+          node_240 << sfn
+        end
+      end
+    end
+
+    def move_490
+      series_entry = node.xpath("//marc:datafield[@tag='510']/marc:subfield[@code='a']", NAMESPACE)[0]
+      return 0 unless series_entry
+      tag = Nokogiri::XML::Node.new "datafield", node
+      tag['tag'] = '490'
+      tag['ind1'] = ' '
+      tag['ind2'] = ' '
+      sfa = Nokogiri::XML::Node.new "subfield", node
+      sfa['code'] = 'a'
+      sfa.content = series_entry.content.gsub("RISM ", "")
+      tag << sfa
+      node.root << tag
+      series_entry.parent.remove
     end
 
     def copy_create_date
@@ -386,40 +390,25 @@ module Marcxml
       date008.content = crdate + date008.content[6..-1]
     end
 
-    def move_300a
-      return 0 if node.xpath("//marc:datafield[@tag='590']/marc:subfield[@code='8']", NAMESPACE).empty?
-      material_links_in_590 = node.xpath("//marc:datafield[@tag='590']/marc:subfield[@code='8']", NAMESPACE).map{|l| l.content}
-      extend_nodes = node.xpath("//marc:datafield[@tag='300']", NAMESPACE)
+    def move_590b
+      extend_nodes = node.xpath("//marc:datafield[@tag='590']/marc:subfield[@code='b']", NAMESPACE)
+      return 0 if extend_nodes.empty?
       material_levels = {}
-      extend_nodes.each do |extent|
-        sf_300_a = extent.xpath("marc:subfield[@code='a']", NAMESPACE)
-        next unless sf_300_a.first.content =~ /part/
-        sf_300_a_content = sf_300_a.first.content.split(":")
-        material_extent = sf_300_a_content[1..-1].join(" ").strip
-        score = sf_300_a_content[0]
-        sf_300_8 = extent.xpath("marc:subfield[@code='8']", NAMESPACE)
-        next if sf_300_8.empty?
-        material_link = sf_300_8.first.content
-        material_levels[material_link] = material_extent
-        # Only change 300$a if there is a corresponding field in 590$8
-        if material_links_in_590.include?(material_link)
-          sf_300_a.first.content = score.strip
-        end
+      extend_nodes.each do |sf|
+        sf_590_8 = sf.xpath("../marc:subfield[@code='8']", NAMESPACE).first
+        material_levels[sf_590_8.content] = sf.content unless sf.content.empty?
+        sf.remove 
       end
-      
-      new_590 = node.xpath("//marc:datafield[@tag='590']", NAMESPACE)
-      new_590.each do |n|
-        sf_590_8 = n.xpath("marc:subfield[@code='8']", NAMESPACE)
-        new_material_link = sf_590_8.first.content
-        if material_levels.keys.include?(new_material_link)
-            sfb = Nokogiri::XML::Node.new "subfield", node
-            sfb['code'] = 'b'
-            sfb.content = material_levels[new_material_link]
-            n << sfb
+
+      nodes_in_300 = node.xpath("//marc:datafield[@tag='300']/marc:subfield[@code='8']", NAMESPACE)
+      nodes_in_300.each do |node|
+        if material_levels.include?(node.content)
+          sf_300_a = node.xpath("../marc:subfield[@code='a']", NAMESPACE).first
+          next unless sf_300_a
+          sf_300_a.content += ": #{material_levels[node.content]}"
         end
       end
     end
-
 
     def convert_attribution(str)
       case str
@@ -489,10 +478,10 @@ module Marcxml
 
     def convert_700_relator(str)
       case str
-      when "clb"
-        return "ctb"
-      when "asn"
-        return "oth"
+      when "ctb"
+        return "clb"
+      when "oth"
+        return "asn"
       else
         return str
       end

@@ -38,24 +38,9 @@ module Marcxml
         binding.pry
       end
       #TODO Switch line break
-      record_string = record.to_s.gsub("&lt;br&gt;", "{{brk}}")
-        .gsub("Îş", "α")
-        .gsub("Îż", "ω")
-        .gsub("ÎÆ", "φ")
-        .gsub("*m33", "m̅")
-        .gsub("*n33", "n̅")
-        .gsub("Ãć","Ä")
-        .gsub("ÃŃ","Ö")
-        .gsub("Ãœ","Ü")
-        .gsub("Ã¤","ä")
-        .gsub("Ãţ","ö")
-        .gsub("ÃŹ","ü")
-        .gsub("ÃŸ","ß")
-        .gsub("Ã¨","è")
-        .gsub("Ã©","é")
-        .gsub("Ã§","ç")
-        .gsub("&lt;", "[")
-        .gsub("&gt;", "]")
+      record_string = record.to_s.gsub("{{brk}}","&lt;br&gt;")
+       # .gsub("[","&lt;")
+       # .gsub("]","&gt;")
 
       doc = Nokogiri::XML.parse(record_string) do |config|
         config.noblanks

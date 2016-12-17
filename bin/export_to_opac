@@ -2,32 +2,25 @@
 
 #echo "$PWD"
 DATE=`date +%Y%m%d`
-#echo "Get data"
-#scp repo.rism.info:/home/stephan/BSB/pool/muscat3_export.tar.gz input/
-#cp input/muscat3_export.tar.gz input/dataset_$DATE.tar.gz
-#tar -xzvf input/muscat3_export.tar.gz -C input
 
 echo "Sources"
-#ruby marcxml --transform -i /tmp/sources.xml -c conf/opac_sources.yaml -o export/opac/rism_sources.xml
+ruby marcxml --transform -i input/tmp/sources.xml -c conf/opac_sources.yaml -o export/opac/rism_sources.xml
 ruby marcxml --analyze -i export/opac/rism_sources.xml -o export/opac/sources_analyze.txt --with-content
 
 #echo "People"
-#ruby marcxml --transform -i /tmp/people.xml -c conf/opac_person.yaml -o export/opac/rism_pe.xml
+#ruby marcxml --transform -i input/tmp/people.xml -c conf/opac_person.yaml -o export/opac/rism_pe.xml
 #ruby marcxml --analyze -i export/opac/rism_pe.xml -o export/opac/people_analyze.txt --with-content
 
 #echo "Catalogue"
-#ruby marcxml --transform -i /tmp/catalogues.xml -c conf/opac_catalogue.yaml -o export/opac/rism_lit.xml
+#ruby marcxml --transform -i input/tmp/catalogues.xml -c conf/opac_catalogue.yaml -o export/opac/rism_lit.xml
 #ruby marcxml --analyze -i export/opac/rism_lit.xml -o export/opac/catalogue_analyze.txt --with-content
 
 #echo "Institutions"
-#ruby marcxml --transform -i input/rism_ks.xml -c conf/transform_institutions.yaml -o export/muscat/institutions.xml --muscat
-#ruby marcxml --analyze -i export/muscat/institutions.xml -o export/muscat/institutions_analyze.txt --with-content
-
-#echo "Digital Objects"
-#cp input/rism_mm.xml export/muscat/digital_objects.xml
-#cp input/rism_thesaurus.xml export/muscat/thesaurus.xml
+#ruby marcxml --transform -i input/tmp/institutions.xml -c conf/opac_institutions.yaml -o export/opac/rism_ks.xml --muscat
+#ruby marcxml --analyze -i export/opac/rism_ks.xml -o export/opac/institutions_analyze.txt --with-content
 
 #echo "Create Archive"
-#tar -czf export/muscat/muscat3data_$DATE.tar.gz export/muscat/*.xml export/muscat/*.txt
+
+#tar -czf input/muscat_$DATE.tar.gz /tmp/sources.xml /tmp/people.xml /tmp/institutions.xml /tmp/catalogues.xml
 
 echo "Completed!"
