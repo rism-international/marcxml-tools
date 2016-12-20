@@ -13,7 +13,7 @@ module Marcxml
       @namespace = namespace
       @node = node
       #@methods = [:add_isil, :change_media, :change_ks_relator, :repair_leader, :add_short_title, :map]
-      @methods = []
+      @methods = [:insert_leader, :map]
     end
 
     def change_media

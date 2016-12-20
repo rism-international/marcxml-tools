@@ -167,6 +167,17 @@ module Marcxml
       leader.content = leader.content.gsub(/#/," ")
     end
 
+    def insert_leader
+      leader = node.xpath("//marc:leader", NAMESPACE).first
+      unless leader
+        leader = Nokogiri::XML::Node.new "leader", node
+        # Dummy leader
+        leader.content="00000ndd a2200000 u 4500"
+        node.root.children.first.add_previous_sibling(leader)
+      end
+    end
+
+
   end
 end
 

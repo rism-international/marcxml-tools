@@ -21,7 +21,7 @@ module Marcxml
       @node = node
       #@methods = [:add_isil, :change_gender, :change_individualize, :change_035, :add_profession, 
       # :split_510, :add_670_id, :change_cataloging_source, :delete_empty_hs, :repair_leader, :map]
-      @methods = [:map]
+      @methods = [:insert_leader, :copy_024_to_035, :map]
     end
 
     def add_profession
@@ -32,6 +32,31 @@ module Marcxml
         sfk['code'] = 'i'
         sfk.content = "profession"
         datafield << sfk
+      end
+    end
+
+    def copy_024_to_035
+      link_result = []
+      links = node.xpath("//marc:datafield[@tag='024']", NAMESPACE)
+      links.each do |l|
+        provider = l.xpath("marc:subfield[@code='2']", NAMESPACE).first.content rescue ""
+        link = l.xpath("marc:subfield[@code='a']", NAMESPACE).first.content rescue ""
+        if provider == 'DNB'
+          link_result << "(DE-588a)#{link}"
+        elsif provider == 'VIAF'
+          link_result << "(DE-588a)(VIAF)#{link}"
+        end
+      end
+      unless link_result.empty?
+        tag = Nokogiri::XML::Node.new "datafield", node
+        tag['tag'] = '035'
+        tag['ind1'] = ' '
+        tag['ind2'] = ' '
+        sfa = Nokogiri::XML::Node.new "subfield", node
+        sfa['code'] = 'a'
+        sfa.content = link_result.join("; ")
+        tag << sfa
+        node.root << tag
       end
     end
 

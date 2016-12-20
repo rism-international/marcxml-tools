@@ -13,7 +13,7 @@ module Marcxml
       @namespace = namespace
       @node = node
       #@methods = [:add_isil, :change_cataloging_source, :repair_leader, :change_type, :copy_110c, :map]
-      @methods = []
+      @methods = [:copy_siglum, :insert_leader, :map]
     end
 
     def change_cataloging_source 
@@ -24,6 +24,18 @@ module Marcxml
     def change_type
       subfield=node.xpath("//marc:datafield[@tag='710']/marc:subfield[@code='4']", NAMESPACE)
       subfield.each { |sf| sf.content = convert_type(sf.content) }
+    end
+
+    def copy_siglum
+      siglum = node.xpath("//marc:datafield[@tag='110']/marc:subfield[@code='g']", NAMESPACE).first
+      if siglum
+        subfield = node.xpath("//marc:datafield[@tag='040']/marc:subfield[@code='a']", NAMESPACE).first
+        if subfield
+          subfield.content = siglum.content
+        else
+          return 0
+        end
+      end
     end
 
     def copy_110c

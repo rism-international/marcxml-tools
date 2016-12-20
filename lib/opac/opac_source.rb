@@ -356,7 +356,6 @@ module Marcxml
         wv = node.xpath("marc:subfield[@code='a']", NAMESPACE).first.content rescue ""
         no = node.xpath("marc:subfield[@code='n']", NAMESPACE).first.content rescue ""
         content = "#{wv} #{no}"
-        binding.pry
         unless node_240n_content.include?(content)
           sfn = Nokogiri::XML::Node.new "marc:subfield", node
           sfn['code'] = 'n'
