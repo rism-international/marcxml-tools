@@ -27,7 +27,8 @@ module Marcxml
     end
 
     def match?
-      id=node.xpath('//marc:controlfield[@tag="001"]', NAMESPACE)[0].content 
+      id=node.xpath('//marc:controlfield[@tag="001"]', NAMESPACE)[0].content rescue nil
+      return false unless id
       Filter.config.each do |k,v|
         if k.include?('$')
           df=k.split("$")[0]

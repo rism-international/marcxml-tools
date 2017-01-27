@@ -29,3 +29,5 @@ bnf.xml
 bnf_out.xml
 out.txt
 aa
+*.mf
+*.LCK

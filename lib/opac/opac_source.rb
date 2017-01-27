@@ -22,7 +22,7 @@ module Marcxml
       @methods = [:change_material, :change_collection, :change_attribution, :prefix_performance,
                   :join_730, :change_243, :change_593_abbreviation, :change_scoring,
                   :join_031t, :rename_digitalisat, :move_590b, :change_700_relator, :move_490,
-                  :move_772_with_b1, :copy_690_to_240n,
+                  :move_772_with_b1, :copy_690_to_240n, :generate_incipit_id,
                   :map]
     end
 
@@ -110,6 +110,10 @@ module Marcxml
         d100 = node.xpath("//marc:datafield[@tag='100']/marc:subfield[@code='a']", NAMESPACE).first.content rescue ""
         if d100 == 'Collection'
           rename_datafield('774', '772')
+        end
+        links_to_collection = node.xpath("//marc:datafield[@tag='773']/marc:subfield[@code='w']", NAMESPACE)
+        links_to_collection.each do |link|
+          link.content = "%014d" % link.content.to_i
         end
       else
         links_to_collection = node.xpath("//marc:datafield[@tag='773']/marc:subfield[@code='w']", NAMESPACE)
@@ -282,6 +286,25 @@ module Marcxml
       end
     end
 
+    def generate_incipit_id
+      isn = node.xpath("//marc:controlfield[@tag='001']", NAMESPACE).first.content rescue nil
+      return if isn.to_i < 1001000000
+      incipit = node.xpath("//marc:datafield[@tag='031']", NAMESPACE)
+      incipit.each do |n|
+        next unless n.xpath("marc:subfield[@code='u']", NAMESPACE).empty?
+        a = n.xpath("marc:subfield[@code='a']", NAMESPACE).first.content rescue ""
+        b = n.xpath("marc:subfield[@code='b']", NAMESPACE).first.content rescue ""
+        c = n.xpath("marc:subfield[@code='c']", NAMESPACE).first.content rescue ""
+        adding_numbers = "#{a}#{b}#{c}" rescue nil
+        if isn && adding_numbers
+          incipit_id = "#{isn}#{adding_numbers}"
+        end
+        sfa = Nokogiri::XML::Node.new "subfield", node
+        sfa['code'] = 'u'
+        sfa.content = incipit_id
+        n << sfa
+      end
+    end
 
     def rename_digitalisat
       subfields = node.xpath("//marc:datafield[@tag='856']/marc:subfield[@code='z']", NAMESPACE)
