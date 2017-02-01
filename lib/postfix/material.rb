@@ -13,7 +13,7 @@ end
 
 ActiveRecord::Base.establish_connection(
     adapter: 'sqlite3',
-    database: 'materials.db'
+    database: 'test.db'
 )
 =begin
 ActiveRecord::Schema.define do

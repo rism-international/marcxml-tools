@@ -291,7 +291,8 @@ module Marcxml
       return if isn.to_i < 1001000000
       incipit = node.xpath("//marc:datafield[@tag='031']", NAMESPACE)
       incipit.each do |n|
-        next unless n.xpath("marc:subfield[@code='u']", NAMESPACE).empty?
+        copied_link = n.xpath("marc:subfield[@code='u']", NAMESPACE).first
+        copied_link.remove if copied_link
         a = n.xpath("marc:subfield[@code='a']", NAMESPACE).first.content rescue ""
         b = n.xpath("marc:subfield[@code='b']", NAMESPACE).first.content rescue ""
         c = n.xpath("marc:subfield[@code='c']", NAMESPACE).first.content rescue ""

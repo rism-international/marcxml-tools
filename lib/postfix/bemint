@@ -1,0 +1,78 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'yaml'
+require 'nokogiri'
+require 'trollop'
+require 'ruby-progressbar'
+require 'rbconfig'
+require 'zip'
+require 'pry'
+require 'colorize'
+
+YAML::ENGINE.yamler='psych'
+#YAML::ENGINE.yamler='syck'
+#OPTIONS
+opts = Trollop::options do
+  version "RISM Marcxml 0.1 (2016.07)"
+  banner <<-EOS
+This utility program changes MARCXML nodes according to an YAML file. 
+Overall required argument is -i [inputfile].
+
+Usage:
+   marcxml [-cio] [-aftmrsd] [--with-content --with-linked --with-disjunct --zip --with-limit]
+where [options] are:
+  EOS
+#  opt :infile, "Input-Filename", :type => :strings, :short => "-i"
+  opt :outfile, "Output-Filename", :type => :string, :default => "out.xml", :short => '-o'
+end
+
+Dir['/home/dev/projects/marcxml-tools/lib/*.rb'].each do |file| 
+  require file 
+end
+
+require 'active_record'
+ActiveRecord::Base.establish_connection(
+    adapter: 'sqlite3',
+    database: 'test.db'
+)
+class Bemint < ActiveRecord::Base
+end
+
+#binding.pry
+#connection = OracleDB.new.connection
+#Trollop::die :infile, "must exist" if !opts[:infile]
+Trollop::die :outfile, "must exist" if opts[:report]
+
+##if opts[:infile].size == 1
+#  source_file = opts[:infile].first
+#else
+#  source_files = opts[:infile]
+#end
+
+ofile=File.open(opts[:outfile], "w")
+
+result = {}
+  #Start reading stream
+
+#curs=connection.exec("select h.rismnr, x.lfdidx, x.text from HSTX01 x inner join HSPR01 h on (h.h0001=x.pr_isn) where x.feld='BEMINT'")
+
+
+#while x = curs.fetch_hash
+#  rismnr = x['RISMNR']
+#  bemtext = x['TEXT'] rescue ""
+#  bemind = x['LFDIDX']
+#  unless result[rismnr]
+#    result[rismnr] = [ {bemind => bemtext} ]
+#  else
+#    result[rismnr] << { bemind => bemtext }
+#  end
+#  binding.pry
+#end
+
+if ofile
+  ofile.write(result.to_yaml)
+  ofile.close
+  puts "\nCompleted!".green
+else
+  puts source_file + " is not a file!".red
+end

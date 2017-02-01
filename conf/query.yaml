@@ -1,6 +1,7 @@
 #Schema MARC21-Tag = Regular Expression
 #Hint: negative query="^(?!.*?TERM).*"
 
+"031$z": "^Scoring: "
 #852$c: '^Go.\s{0,1}S.*$'
 
 #"001": 
@@ -21,7 +22,7 @@
 
 #100$0: "30000391"
 #852$a: "D-Mmb$"
-852$a: "A-SPD$"
+#852$a: "A-SPD$"
 
 #"490$a": "^A/I$"
 #"852$a": "US-WS"
