@@ -1,0 +1,103 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'yaml'
+require 'nokogiri'
+require 'trollop'
+require 'ruby-progressbar'
+require 'rbconfig'
+require 'zip'
+require 'pry'
+require 'colorize'
+require 'sqlite3'
+require 'active_record'
+YAML::ENGINE.yamler='psych'
+NAMESPACE={'marc' => "http://www.loc.gov/MARC21/slim"}
+
+opts = Trollop::options do
+  version "RISM Marcxml 0.1 (2016.07)"
+  banner <<-EOS
+This utility program changes MARCXML nodes according to an YAML file. 
+Overall required argument is -i [inputfile].
+
+Usage:
+   marcxml [-cio] [-aftmrsd] [--with-content --with-linked --with-disjunct --zip --with-limit]
+where [options] are:
+  EOS
+  opt :infile, "Input-Filename", :type => :strings, :short => "-i"
+  opt :outfile, "Output-Filename", :type => :string, :default => "out.xml", :short => '-o'
+end
+
+Dir['/home/dev/projects/marcxml-tools/lib/*.rb'].each do |file| 
+  require file 
+end
+
+connection = OracleDB.new.connection
+
+ActiveRecord::Base.establish_connection(
+    adapter: 'sqlite3',
+    database: 'lib/postfix/db/materials.db'
+)
+class Material < ActiveRecord::Base
+end
+
+ofile=File.open(opts[:outfile], "w")
+
+total = 15812
+
+bar = ProgressBar.create(title: "Found", :format => "%c of %C Records parsed. -- %a | %B | %p%% %e".yellow, total: total, remainder_mark: '-', progress_mark: '#')
+
+result = {}
+
+curs = connection.exec("select * from ss_260c")
+
+while db = curs.fetch_hash
+  m = Material.where(:isn => db['PR_ISN']).take
+  if !m || m._260c
+    bar.increment
+    next
+  elsif !m._260c && db['PB814']
+    puts db['PB814']
+    if result[m._001]
+      result[m._001] << {m.layer => db['PB814']}
+    else
+      result[m._001] = [ {m.layer => db['PB814']} ]
+    end
+    bar.increment
+  end
+end
+
+
+#if source_file
+#  #Start reading stream
+#  xmlstream = Marcxml::Xmlstream.new(ofile)
+#  xmlstream.each_record(source_file) do |record|
+#    isn=record.xpath("//marc:controlfield[@tag='001']", NAMESPACE).first.content rescue next
+#    next if isn =~ /^989/ || isn =~ /^0000099/
+#    kallistox = Bemint.where(:isn => isn)
+#    next if kallistox.empty?
+#    bemuebs=record.xpath("//marc:datafield[@tag='500']/marc:subfield[@code='a']", NAMESPACE)
+#    bemuebs.each do |bemueb|
+#      kallistox.each do |kallisto|
+#        #if kallisto.bemtext == bemueb.content
+#        next unless kallisto.bemtext
+#        if bemueb.content == kallisto.bemtext.encode("iso-8859-1").force_encoding("utf-8")
+#          puts "#{kallisto.bemtext.encode("iso-8859-1").force_encoding("utf-8")} == #{bemueb.content}"
+#          if result[isn]
+#            result[isn] << bemueb.content
+#          else
+#            result[isn] = [ bemueb.content ]
+#          end
+#        end
+#      end
+#    end
+#  end
+#end 
+
+if ofile
+  ofile.write(Hash[result.sort].to_yaml)
+  ofile.close
+  puts "\nCompleted!".green
+else
+  puts source_file + " is not a file!".red
+end
+
