@@ -5,9 +5,9 @@ module Marcxml
       os = RbConfig::CONFIG['host_os']
       total = 0
       if os =~ /linux/
-        total =`grep -c "<marc:record>" #{source_file}`.to_i
+        total =`grep -c "<marc:record" #{source_file}`.to_i
         if total == 0
-          total =`grep -c "<record>" #{source_file}`.to_i
+          total =`grep -c "<record" #{source_file}`.to_i
         end
       else
         file_size=File.size(source_file)

@@ -1,6 +1,6 @@
 require 'yaml'
 opac = YAML.load_file("../export/opac/#{ARGV[0]}_analyze.txt")
-old = YAML.load_file("../input/#{ARGV[0]}_analyze.txt")
+old = YAML.load_file("../export/opac/archive/#{ARGV[0]}_analyze.txt")
 
 puts ARGV[0]
 puts "TAG\t|\tOLD\t|\tNEW\t|\t  "

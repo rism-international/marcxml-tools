@@ -16,7 +16,7 @@ module Marcxml
     def initialize(node, namespace={'marc' => "http://www.loc.gov/MARC21/slim"})
       @namespace = namespace
       @node = node
-      @methods = [:fix_id, :fix_dots, :map]
+      @methods = [:fix_id, :fix_dots, :insert_original_entry, :add_material_layer, :map]
     end
 
     # Records have string at beginning
@@ -27,18 +27,20 @@ module Marcxml
       links.each {|link| link.content = link.content.gsub("(OCoLC)", "1")}
     end
 
-    # Records have dot or komma at end
-    def fix_dots
-      fields = %w(100$a 100$d 240$a 300$a 710$a 700$a 700$d)
-      fields.each do |field|
-        tag, code = field.split("$")
-        links = node.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{code}']", NAMESPACE)
-        links.each {|link| link.content = link.content.gsub(/[\.,:]$/, "")}
-      end
-
+    def insert_original_entry
+      id = node.xpath("//marc:controlfield[@tag='001']", NAMESPACE)[0].content
+      tag = Nokogiri::XML::Node.new "datafield", node
+      tag['tag'] = '500'
+      tag['ind1'] = ' '
+      tag['ind2'] = ' '
+      sfa = Nokogiri::XML::Node.new "subfield", node
+      sfa['code'] = 'a'
+      sfa.content = "Original catalogue entry: https://moravianmusic.on.worldcat.org/oclc/#{id[1..-1]}"
+      tag << sfa
+      node.root << tag
     end
-
-
+ 
+    
 
   end
 end

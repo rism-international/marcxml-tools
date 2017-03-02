@@ -176,7 +176,29 @@ module Marcxml
         node.root.children.first.add_previous_sibling(leader)
       end
     end
+# Records have dot or komma at end
+    def fix_dots
+      fields = %w(100$a 100$d 240$a 300$a 710$a 700$a 700$d)
+      fields.each do |field|
+        tag, code = field.split("$")
+        links = node.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{code}']", NAMESPACE)
+        links.each {|link| link.content = link.content.gsub(/[\.,:]$/, "")}
+      end
+    end
 
+    def add_material_layer
+      layers = %w(260 300)
+      layers.each do |l|
+        material = node.xpath("//marc:datafield[@tag='#{l}']", NAMESPACE)
+        material.each do |block|
+          next unless block.xpath("marc:subfield[@code='8']", NAMESPACE).empty?
+          sf8 = Nokogiri::XML::Node.new "subfield", node
+          sf8['code'] = '8'
+          sf8.content = "01"
+          block << sf8
+        end
+      end
+    end
 
   end
 end
