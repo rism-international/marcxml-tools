@@ -1,8 +1,0 @@
-Class: Brno
-Mapping:
-  - "856$y": "z"
-  - "100$4": ~
-  - "100$7": ~
-
-#"move subfields":
-  #- "931$h": "100"

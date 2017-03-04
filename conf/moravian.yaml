@@ -1,9 +1,0 @@
-Class: Moravian
-Mapping:
-  - "852$p": "c"
-  - "650": ~
-  - "031$z": ~
-  #- "100$7": ~
-
-#"move subfields":
-  #- "931$h": "100"
