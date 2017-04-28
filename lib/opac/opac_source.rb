@@ -22,7 +22,9 @@ module Marcxml
       @methods = [:change_material, :change_collection, :change_attribution, :prefix_performance,
                   :join_730, :change_243, :change_593_abbreviation, :change_scoring,
                   :join_031t, :rename_digitalisat, :move_590b, :change_700_relator, :move_490,
-                  :move_772_with_b1, :copy_690_to_240n, :generate_incipit_id,
+                  :move_772_with_b1, :generate_incipit_id,
+                  #, :copy_690_to_240n
+
                   :map]
     end
 

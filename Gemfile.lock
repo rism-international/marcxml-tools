@@ -23,6 +23,7 @@ GEM
     builder (3.0.4)
     coderay (1.1.1)
     colorize (0.8.1)
+    diff-lcs (1.2.5)
     htmlentities (4.3.4)
     i18n (0.6.1)
     method_source (0.8.2)
@@ -34,6 +35,19 @@ GEM
       coderay (~> 1.0)
       method_source (~> 0.8)
       slop (~> 3.4)
+    rspec (3.5.0)
+      rspec-core (~> 3.5.0)
+      rspec-expectations (~> 3.5.0)
+      rspec-mocks (~> 3.5.0)
+    rspec-core (3.5.4)
+      rspec-support (~> 3.5.0)
+    rspec-expectations (3.5.0)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.5.0)
+    rspec-mocks (3.5.0)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.5.0)
+    rspec-support (3.5.0)
     ruby-oci8 (2.2.2)
     ruby-progressbar (1.7.5)
     rubyzip (1.1.7)
@@ -55,9 +69,13 @@ DEPENDENCIES
   colorize
   nokogiri
   pry
+  rspec
   ruby-oci8
   ruby-progressbar
   rubyzip
   sqlite3
   trollop
   zip-zip
+
+BUNDLED WITH
+   1.11.2

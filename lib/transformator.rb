@@ -188,7 +188,7 @@ module Marcxml
 
     # Add missing material layer for different fields
     def add_material_layer
-      layers = %w(260 300)
+      layers = %w(260 300 592)
       layers.each do |l|
         material = node.xpath("//marc:datafield[@tag='#{l}']", NAMESPACE)
         material.each do |block|
@@ -205,15 +205,17 @@ module Marcxml
     def concat_personal_name
       fields = %w(100 700)
       fields.each do |field|
-        person = node.xpath("//marc:datafield[@tag='#{field}']", NAMESPACE)
-        name_a = person.xpath("marc:subfield[@code='a']", NAMESPACE).first rescue nil
-        name_b = person.xpath("marc:subfield[@code='b']", NAMESPACE).first rescue nil
-        if name_a && name_b 
-          last_name = name_a.content rescue ""
-          first_name = name_b.content rescue "" 
-          full_name = "#{last_name}, #{first_name}"
-          name_a.content = full_name
-          name_b.remove
+        people = node.xpath("//marc:datafield[@tag='#{field}']", NAMESPACE)
+        people.each do |person|
+          name_a = person.xpath("marc:subfield[@code='a']", NAMESPACE).first rescue nil
+          name_b = person.xpath("marc:subfield[@code='b']", NAMESPACE).first rescue nil
+          if name_a && name_b 
+            last_name = name_a.content rescue ""
+            first_name = name_b.content rescue "" 
+            full_name = "#{last_name}, #{first_name}"
+            name_a.content = full_name
+            name_b.remove
+          end
         end
       end
     end

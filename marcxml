@@ -216,7 +216,7 @@ if (source_file && File.exists?(source_file)) || source_files
     exit
   end
   
-  non_opac = File.exist?("lib/opac/non_opac.yml") ? YAML.load_file("lib/opac/non_opac.yml") : []
+#  non_opac = File.exist?("lib/opac/non_opac.yml") ? YAML.load_file("lib/opac/non_opac.yml") : []
 
   #Start reading stream
   xmlstream = Marcxml::Xmlstream.new(ofile)
@@ -224,9 +224,9 @@ if (source_file && File.exists?(source_file)) || source_files
   xmlstream.each_record(source_file) do |record|
     if opts[:transform]
       isn = record.xpath('//marc:controlfield[@tag="001"]', NAMESPACE)[0].content rescue next
-      if non_opac.include?(isn)
-        next
-      end
+      #if non_opac.include?(isn)
+      #  next
+      #end
       tr = transform_class.new(record)
       tr.execute_all
       #FIXME Why only with muscat classes?

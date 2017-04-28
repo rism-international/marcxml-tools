@@ -1,7 +1,7 @@
 #Schema MARC21-Tag = Regular Expression
 #Hint: negative query="^(?!.*?TERM).*"
 
-"031$z": "^Scoring: "
+#"031$z": "^Scoring: "
 #852$c: '^Go.\s{0,1}S.*$'
 
 #"001": 
@@ -13,10 +13,10 @@
 #  - "^605.*"
 
 #"001": "000100621"
-#700$a: "Becker, Carl Ferdinand"
+500$a: 'Mus.*-I-.*'
 #700$4: "fmo"
-#852$a: 
-#  - "I-Bc"
+852$a: "D-Dl" 
+# - "D-Dl"
   #- "D-Hs"
   #- "US-SA"
 
