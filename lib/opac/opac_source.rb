@@ -22,7 +22,7 @@ module Marcxml
       @methods = [:change_material, :change_collection, :change_attribution, :prefix_performance,
                   :join_730, :change_243, :change_593_abbreviation, :change_scoring,
                   :join_031t, :rename_digitalisat, :move_590b, :change_700_relator, :move_490,
-                  :move_772_with_b1, :generate_incipit_id,
+                  :move_772_with_b1, :generate_incipit_id, :add_layer_for_copyists,
                   #, :copy_690_to_240n
 
                   :map]
@@ -123,6 +123,11 @@ module Marcxml
           link.content = "%09d" % link.content.to_i
           link.attributes["code"].value = "a"
         end
+        links_to_preprint = node.xpath("//marc:datafield[@tag='775']/marc:subfield[@code='w']", NAMESPACE)
+        links_to_preprint.each do |link|
+          link.content = "%014d" % link.content.to_i
+          binding.pry
+        end
       end
     end
 
@@ -164,6 +169,23 @@ module Marcxml
       subfield700.each { |sf| sf.content = convert_700_relator(sf.content) }
     end
 
+    def add_layer_for_copyists
+      tags=node.xpath("//marc:datafield[@tag='700']", NAMESPACE)
+      tags.each do |tag|
+        if tag.xpath("marc:subfield[@code='8']", NAMESPACE).empty?
+          begin
+            if tag.xpath("marc:subfield[@code='4']", NAMESPACE).first.content == "scr"
+              sf2 = Nokogiri::XML::Node.new "subfield", node
+              sf2['code'] = '8'
+              sf2.content = '1\c'
+              tag << sf2
+            end
+          rescue 
+            next
+          end
+        end
+      end
+    end
 
     def change_593_abbreviation
       subfield=node.xpath("//marc:datafield[@tag='593']/marc:subfield[@code='a']", NAMESPACE)

@@ -1,0 +1,129 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'yaml'
+require 'nokogiri'
+require 'trollop'
+require 'ruby-progressbar'
+require 'rbconfig'
+require 'zip'
+require 'pry'
+require 'colorize'
+require 'sqlite3'
+require 'active_record'
+YAML::ENGINE.yamler='psych'
+NAMESPACE={'marc' => "http://www.loc.gov/MARC21/slim"}
+
+opts = Trollop::options do
+  version "RISM Marcxml 0.1 (2016.07)"
+  banner <<-EOS
+This utility program changes MARCXML nodes according to an YAML file. 
+Overall required argument is -i [inputfile].
+
+Usage:
+   marcxml [-cio] [-aftmrsd] [--with-content --with-linked --with-disjunct --zip --with-limit]
+where [options] are:
+  EOS
+  opt :infile, "Input-Filename", :type => :strings, :short => "-i"
+  opt :outfile, "Output-Filename", :type => :string, :default => "out.xml", :short => '-o'
+end
+
+Dir['/home/dev/projects/marcxml-tools/lib/*.rb'].each do |file| 
+  require file 
+end
+
+def convert_attribution(str)
+  case str
+  when "e"
+    return "ascertained"
+  when "z"
+    return "doubtful"
+  when "g"
+    return "verified"
+  when "f"
+    return "misattributed"
+  when "l"
+    return "alleged"
+  when "m"
+    return "conjectural"
+  else
+    return str
+  end
+end
+
+
+connection = OracleDB.new.connection
+
+ActiveRecord::Base.establish_connection(
+    adapter: 'sqlite3',
+    database: 'lib/postfix/db/materials.db'
+)
+class Material < ActiveRecord::Base
+end
+
+ofile=File.open(opts[:outfile], "w")
+
+total = 3000
+
+bar = ProgressBar.create(title: "Found", :format => "%c of %C Records parsed. -- %a | %B | %p%% %e".yellow, total: total, remainder_mark: '-', progress_mark: '#')
+
+result = {}
+
+curs = connection.exec("select pr_isn, rismnr, swvf, hn2010, ortzus from ss_260ab")
+
+while db = curs.fetch_hash
+  m = Material.where(:isn => db['PR_ISN']).take
+  if !m
+    binding.pry
+    next
+  end
+  ortzus = db['ORTZUS'] ? " [#{convert_attribution(db['ORTZUS'])}]" : ''
+  content = db['HN2010'] ? "#{db['HN2010']}" : ''
+  #puts content.encode("iso-8859-1").force_encoding("utf-8")
+  content_utf8 = content.encode("iso-8859-1").force_encoding("utf-8")
+  content_utf8.encode!('UTF-8', 'UTF-8', :invalid => :replace)
+
+  if result[m._001]
+    result[m._001] << {m.layer => content_utf8 + ortzus}
+  else
+    result[m._001] = [{m.layer => content_utf8 + ortzus}]
+  end
+  bar.increment
+end
+
+
+#if source_file
+#  #Start reading stream
+#  xmlstream = Marcxml::Xmlstream.new(ofile)
+#  xmlstream.each_record(source_file) do |record|
+#    isn=record.xpath("//marc:controlfield[@tag='001']", NAMESPACE).first.content rescue next
+#    next if isn =~ /^989/ || isn =~ /^0000099/
+#    kallistox = Bemint.where(:isn => isn)
+#    next if kallistox.empty?
+#    bemuebs=record.xpath("//marc:datafield[@tag='500']/marc:subfield[@code='a']", NAMESPACE)
+#    bemuebs.each do |bemueb|
+#      kallistox.each do |kallisto|
+#        #if kallisto.bemtext == bemueb.content
+#        next unless kallisto.bemtext
+#        if bemueb.content == kallisto.bemtext.encode("iso-8859-1").force_encoding("utf-8")
+#          puts "#{kallisto.bemtext.encode("iso-8859-1").force_encoding("utf-8")} == #{bemueb.content}"
+#          if result[isn]
+#            result[isn] << bemueb.content
+#          else
+#            result[isn] = [ bemueb.content ]
+#          end
+#        end
+#      end
+#    end
+#  end
+#end 
+
+if ofile
+  ofile.write(Hash[result.sort].to_yaml)
+  ofile.close
+  puts "\nCompleted!".green
+else
+  puts source_file + " is not a file!".red
+end
+
+
+
