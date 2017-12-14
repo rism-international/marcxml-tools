@@ -5,20 +5,20 @@ DATE=`date +%Y%m%d`
 SOURCES_FILE=rism_`date +%y%m%d`.xml
 
 echo "Sources"
-#ruby marcxml --transform -i input/tmp/sources.xml -c conf/opac_sources.yaml -o export/opac/$SOURCES_FILE
+ruby marcxml --transform -i input/tmp/sources.xml -c conf/opac_sources.yaml -o export/opac/$SOURCES_FILE
 ruby marcxml --analyze -i export/opac/$SOURCES_FILE -o export/opac/sources_analyze.txt --with-content
 
 echo "People"
-#ruby marcxml --transform -i input/tmp/people.xml -c conf/opac_person.yaml -o export/opac/rism_pe.xml
-#ruby marcxml --analyze -i export/opac/rism_pe.xml -o export/opac/people_analyze.txt --with-content
+ruby marcxml --transform -i input/tmp/people.xml -c conf/opac_person.yaml -o export/opac/rism_pe.xml
+ruby marcxml --analyze -i export/opac/rism_pe.xml -o export/opac/people_analyze.txt --with-content
 
 echo "Catalogue"
-#ruby marcxml --transform -i input/tmp/catalogues.xml -c conf/opac_catalogue.yaml -o export/opac/rism_lit.xml
-#ruby marcxml --analyze -i export/opac/rism_lit.xml -o export/opac/catalogues_analyze.txt --with-content
+ruby marcxml --transform -i input/tmp/catalogues.xml -c conf/opac_catalogue.yaml -o export/opac/rism_lit.xml
+ruby marcxml --analyze -i export/opac/rism_lit.xml -o export/opac/catalogues_analyze.txt --with-content
 
 echo "Institutions"
-#ruby marcxml --transform -i input/tmp/institutions.xml -c conf/opac_institutions.yaml -o export/opac/rism_ks.xml --muscat
-#ruby marcxml --analyze -i export/opac/rism_ks.xml -o export/opac/institutions_analyze.txt --with-content
+ruby marcxml --transform -i input/tmp/institutions.xml -c conf/opac_institutions.yaml -o export/opac/rism_ks.xml --muscat
+ruby marcxml --analyze -i export/opac/rism_ks.xml -o export/opac/institutions_analyze.txt --with-content
 
 echo "Create Archive"
 cd export/opac

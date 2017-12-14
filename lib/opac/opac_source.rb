@@ -312,7 +312,8 @@ module Marcxml
 
     def generate_incipit_id
       isn = node.xpath("//marc:controlfield[@tag='001']", NAMESPACE).first.content rescue nil
-      return if isn.to_i < 1001000000
+      migrated = isn.start_with?("55301") ? true : false
+      return if isn.to_i < 1001000000 && !migrated
       incipit = node.xpath("//marc:datafield[@tag='031']", NAMESPACE)
       incipit.each do |n|
         copied_link = n.xpath("marc:subfield[@code='u']", NAMESPACE).first
