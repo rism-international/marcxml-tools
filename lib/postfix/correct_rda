@@ -25,7 +25,7 @@ where [options] are:
   opt :outfile, "Output-Filename", :type => :string, :default => "out.xml", :short => '-o'
 end
 
-Dir['/home/stephan/projects/marcxml-tools/lib/*.rb'].each do |file| 
+Dir['/home/dev/projects/marcxml-tools/lib/*.rb'].each do |file| 
   require file 
 end
 
@@ -41,19 +41,41 @@ Trollop::die :outfile, "must exist" if opts[:report]
 #end
 
 ofile=File.open(opts[:outfile], "w")
-
 result = {}
   #Start reading stream
+
 curs = connection.exec("select rismnr, h41840 from ss_730 order by rismnr")
 while x = curs.fetch_hash
   rismnr = x['RISMNR']
   rda = x['H41840']
+  rda_utf8 = rda.encode("iso-8859-1").force_encoding("utf-8") if rda
+  rda_utf8.encode!('UTF-8', 'UTF-8', :invalid => :replace)
   unless result[rismnr]
-    result[rismnr] = rda
+    result[rismnr] = [rda_utf8]
   else
-    result[rismnr] << rda
+    binding.pry
+    result[rismnr] << rda_utf8
+    binding.pry
   end
+
 end
+
+curs = connection.exec("select rismnr, h41840 from ss_730_ve order by rismnr")
+while x = curs.fetch_hash
+  rismnr = x['RISMNR']
+  rda = x['H41840']
+  rda_utf8 = rda.encode("iso-8859-1").force_encoding("utf-8") if rda
+  rda_utf8.encode!('UTF-8', 'UTF-8', :invalid => :replace)
+  unless result[rismnr]
+    result[rismnr] = [rda_utf8]
+  else
+    binding.pry
+    result[rismnr] << rda_utf8 unless result[rismnr].include?(rda_utf8)
+    binding.pry
+  end
+
+end
+
 
 if ofile
   ofile.write(result.to_yaml)
