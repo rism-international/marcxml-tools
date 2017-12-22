@@ -44,7 +44,7 @@ ofile=File.open(opts[:outfile], "w")
 result = {}
   #Start reading stream
 
-curs = connection.exec("select rismnr, h41840 from ss_730 order by rismnr")
+curs = connection.exec("select rismnr, h41840 from ss_730_new order by rismnr")
 while x = curs.fetch_hash
   rismnr = x['RISMNR']
   rda = x['H41840']
@@ -60,21 +60,21 @@ while x = curs.fetch_hash
 
 end
 
-curs = connection.exec("select rismnr, h41840 from ss_730_ve order by rismnr")
-while x = curs.fetch_hash
-  rismnr = x['RISMNR']
-  rda = x['H41840']
-  rda_utf8 = rda.encode("iso-8859-1").force_encoding("utf-8") if rda
-  rda_utf8.encode!('UTF-8', 'UTF-8', :invalid => :replace)
-  unless result[rismnr]
-    result[rismnr] = [rda_utf8]
-  else
-    binding.pry
-    result[rismnr] << rda_utf8 unless result[rismnr].include?(rda_utf8)
-    binding.pry
-  end
+#curs = connection.exec("select rismnr, h41840 from ss_730_ve order by rismnr")
+#while x = curs.fetch_hash
+#  rismnr = x['RISMNR']
+#  rda = x['H41840']
+#  rda_utf8 = rda.encode("iso-8859-1").force_encoding("utf-8") if rda
+#  rda_utf8.encode!('UTF-8', 'UTF-8', :invalid => :replace)
+#  unless result[rismnr]
+#    result[rismnr] = [rda_utf8]
+#  else
+#    binding.pry
+#    result[rismnr] << rda_utf8 unless result[rismnr].include?(rda_utf8)
+#    binding.pry
+#  end
 
-end
+#end
 
 
 if ofile
