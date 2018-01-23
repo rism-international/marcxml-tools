@@ -41,19 +41,34 @@ Trollop::die :outfile, "must exist" if opts[:report]
 #end
 
 ofile=File.open(opts[:outfile], "w")
-
 result = {}
   #Start reading stream
-curs = connection.exec("select pr_isn, a0540 from ss_isbn order by pr_isn")
+
+curs = connection.exec("select RISMNR, HS from ss_240_new order by RISMNR")
 while x = curs.fetch_hash
-  rismnr = x['PR_ISN']
-  isbn = x['A0540']
-  unless result[rismnr]
-    result[rismnr] = isbn
-  else
-    result[rismnr] << isbn
-  end
+  rismnr = x['RISMNR']
+  rda = x['HS']
+  rda_utf8 = rda.encode("iso-8859-1").force_encoding("utf-8") if rda
+  rda_utf8.encode!('UTF-8', 'UTF-8', :invalid => :replace)
+  result[rismnr] = rda_utf8
 end
+
+#curs = connection.exec("select rismnr, h41840 from ss_730_ve order by rismnr")
+#while x = curs.fetch_hash
+#  rismnr = x['RISMNR']
+#  rda = x['H41840']
+#  rda_utf8 = rda.encode("iso-8859-1").force_encoding("utf-8") if rda
+#  rda_utf8.encode!('UTF-8', 'UTF-8', :invalid => :replace)
+#  unless result[rismnr]
+#    result[rismnr] = [rda_utf8]
+#  else
+#    binding.pry
+#    result[rismnr] << rda_utf8 unless result[rismnr].include?(rda_utf8)
+#    binding.pry
+#  end
+
+#end
+
 
 if ofile
   ofile.write(result.to_yaml)
