@@ -126,7 +126,7 @@ module Marcxml
         links_to_preprint = node.xpath("//marc:datafield[@tag='775']/marc:subfield[@code='w']", NAMESPACE)
         links_to_preprint.each do |link|
           link.content = "%014d" % link.content.to_i
-          binding.pry
+          #binding.pry
         end
       end
     end
