@@ -85,6 +85,18 @@ module Marcxml
       node.xpath("//marc:datafield[@tag='#{tag}']", NAMESPACE).remove
     end
 
+    def remove_controlfield(tag)
+      node.xpath("//marc:controlfield[@tag='#{tag}']", NAMESPACE).remove
+    end
+
+    def remove_field(tag)
+      if tag.to_i < 10
+        remove_controlfield(tag)
+      else
+        remove_datafield(tag)
+      end
+    end
+
     def rename_datafield(tag, new_tag)
       if !node.xpath("//marc:datafield[@tag='#{new_tag}']", NAMESPACE).empty? && !node.xpath("//marc:datafield[@tag='#{tag}']", NAMESPACE).empty?
         puts "WARNING: Tag #{new_tag} already exits!"
@@ -218,6 +230,32 @@ module Marcxml
           end
         end
       end
+    end
+
+    def clear_unknown_muscat_fields(conf)
+      node.xpath("//marc:controlfield", NAMESPACE).each do |t|
+        tag = t.attr("tag")
+        if !conf.keys.include?(tag)
+          t.remove
+        end
+      end
+      node.xpath("//marc:datafield", NAMESPACE).each do |t|
+        tag = t.attr("tag")
+        if !conf.keys.include?(tag)
+          t.remove
+        else
+          t.xpath("marc:subfield",  NAMESPACE).each do |s|
+            code = s.attr("code")
+            if !conf[tag].include?(code)
+              s.remove
+            end
+          end
+        end
+        if t.xpath("marc:subfield",  NAMESPACE).empty?
+          t.remove
+        end
+      end
+
     end
 
   end
