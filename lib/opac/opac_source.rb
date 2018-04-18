@@ -22,7 +22,7 @@ module Marcxml
       @methods = [:change_material, :change_collection, :change_attribution, :prefix_performance,
                   :join_730, :change_243, :change_593_abbreviation, :change_scoring,
                   :join_031t, :rename_digitalisat, :move_590b, :change_700_relator, :move_490,
-                  :move_772_with_b1, :generate_incipit_id, :add_layer_for_copyists,
+                  :move_772_with_b1, :generate_incipit_id, :add_incipit_id, :add_layer_for_copyists,
                   #, :copy_690_to_240n
 
                   :map]
@@ -120,8 +120,12 @@ module Marcxml
       else
         links_to_collection = node.xpath("//marc:datafield[@tag='773']/marc:subfield[@code='w']", NAMESPACE)
         links_to_collection.each do |link|
-          link.content = "%09d" % link.content.to_i
-          link.attributes["code"].value = "a"
+          if link.content.start_with?("993")
+            link.content = "%014d" % link.content.to_i
+          else
+            link.content = "%09d" % link.content.to_i
+            link.attributes["code"].value = "a"
+          end
         end
         links_to_preprint = node.xpath("//marc:datafield[@tag='775']/marc:subfield[@code='w']", NAMESPACE)
         links_to_preprint.each do |link|
@@ -329,6 +333,34 @@ module Marcxml
         sfa['code'] = 'u'
         sfa.content = incipit_id
         n << sfa
+      end
+    end
+
+    #if there isn't a incipit id at subfield $u at all
+    def add_incipit_id
+      isn = node.xpath("//marc:controlfield[@tag='001']", NAMESPACE).first.content rescue nil
+      incipit = node.xpath("//marc:datafield[@tag='031']", NAMESPACE)
+      incipit.each do |n|
+        existent = n.xpath("marc:subfield[@code='u']", NAMESPACE).first
+        pae = n.xpath("marc:subfield[@code='p']", NAMESPACE).first
+        if existent
+          next
+        elsif !pae
+          next
+        else
+          binding.pry
+          a = n.xpath("marc:subfield[@code='a']", NAMESPACE).first.content rescue ""
+          b = n.xpath("marc:subfield[@code='b']", NAMESPACE).first.content rescue ""
+          c = n.xpath("marc:subfield[@code='c']", NAMESPACE).first.content rescue ""
+          adding_numbers = "#{a}#{b}#{c}" rescue nil
+          if isn && adding_numbers
+            incipit_id = "#{isn}#{adding_numbers}"
+          end
+          sfa = Nokogiri::XML::Node.new "subfield", node
+          sfa['code'] = 'u'
+          sfa.content = incipit_id
+          n << sfa
+        end
       end
     end
 
