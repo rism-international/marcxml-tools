@@ -52,7 +52,7 @@ GEM
     ruby-progressbar (1.7.5)
     rubyzip (1.1.7)
     slop (3.6.0)
-    sqlite3 (1.3.8)
+    sqlite3 (1.3.13)
     trollop (2.1.2)
     tzinfo (0.3.38)
     zip-zip (0.3)
@@ -78,4 +78,4 @@ DEPENDENCIES
   zip-zip
 
 BUNDLED WITH
-   1.11.2
+   1.16.1
