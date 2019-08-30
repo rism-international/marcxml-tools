@@ -20,8 +20,12 @@ echo "Institutions"
 ruby marcxml --transform -i input/tmp/institutions.xml -c conf/opac_institutions.yaml -o export/opac/rism_ks.xml --muscat
 ruby marcxml --analyze -i export/opac/rism_ks.xml -o export/opac/institutions_analyze.txt --with-content
 
+echo "Works"
+ruby marcxml --transform -i input/tmp/works.xml -c conf/opac_works.yaml -o export/opac/rism_works.xml --muscat
+ruby marcxml --analyze -i export/opac/rism_works.xml -o export/opac/works_analyze.txt --with-content
+
 echo "Create Archive"
 cd export/opac
-zip rism_`date +%y%m%d`_all.zip rism_`date +%y%m%d`.xml rism_pe.xml rism_lit.xml rism_ks.xml
+zip rism_`date +%y%m%d`_all.zip rism_`date +%y%m%d`.xml rism_pe.xml rism_lit.xml rism_ks.xml rism_works.xml
 
 echo "Completed!"

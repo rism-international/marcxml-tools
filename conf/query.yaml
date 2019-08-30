@@ -15,8 +15,8 @@
 #"001": "000100621"
 #500$a: 'Mus.*-I-.*'
 #700$4: "fmo"
-561$a: "Musikbibliothek Peters"
-#852$a: "D-Dl" 
+#561$a: "Musikbibliothek Peters"
+#852$a: "D-Mbs" 
 # - "D-Dl"
   #- "D-Hs"
   #- "US-SA"
@@ -33,7 +33,9 @@
 #"005": "^2015"
 #"100$a":
 #  - "Bach, Johann Sebastian"
-#"852$a": "^D-B$"
+"852$a": 
+  - "^D-B$"
+  - "^D-Bsa$"
 
 #500$a: "Diese Musikquelle ist Gegenstand des DFG-Projekts .*Die Notenbestände der Dresdner Hofkirche und der Königlichen Privat-Musikaliensammlung"
 #561$a: 
