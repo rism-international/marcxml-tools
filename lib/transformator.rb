@@ -23,7 +23,7 @@ module Marcxml
     def rename_subfield_code(tag, old_code, new_code)
       subfield=node.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{old_code}']", NAMESPACE)
       if !subfield.empty? && !node.xpath("//marc:datafield[@tag='#{tag}']/marc:subfield[@code='#{new_code}']", NAMESPACE).empty?
-        puts "WARNING: #{tag}$#{new_code} already exits!".red
+        #puts "WARNING: #{tag}$#{new_code} already exits!".red
       end
       subfield.attr('code', new_code) if subfield
       subfield
@@ -200,7 +200,7 @@ module Marcxml
 
     # Add missing material layer for different fields
     def add_material_layer
-      layers = %w(260 300 592)
+      layers = %w(260 300 592 593)
       layers.each do |l|
         material = node.xpath("//marc:datafield[@tag='#{l}']", NAMESPACE)
         material.each do |block|
